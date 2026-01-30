@@ -1,12 +1,13 @@
 import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, View, StyleSheet, ScrollView } from "react-native";
+import { KeyboardAvoidingView, Platform, View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { TextInput, Text, Button, useTheme, ActivityIndicator } from "react-native-paper";
 
 export default function AuthScreen() {
     const [isSignUp, setIsSignUp] = useState<boolean>(false);
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
+    const [showPassword, setShowPassword] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -52,7 +53,6 @@ export default function AuthScreen() {
             style={styles.container}
             keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
-            {/* Loading Overlay */}
             {isLoading && (
                 <View style={styles.loadingOverlay}>
                     <ActivityIndicator size="large" color="#7A9B76" />
@@ -67,18 +67,35 @@ export default function AuthScreen() {
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
             >
+                {/* Decorative dots */}
                 <View style={styles.decorativeDot1} />
                 <View style={styles.decorativeDot2} />
                 <View style={styles.decorativeDot3} />
                 
-                <View style={styles.contentContainer}>
+                {/* Logo Section */}
+                <View style={styles.logoSection}>
+                    <View style={styles.logoRow}>
+                        <View style={styles.logoBox}>
+                            <Text style={styles.logoEmoji}>🌱</Text>
+                        </View>
+                        <View>
+                            <Text style={styles.appName}>resoly</Text>
+                            <Text style={styles.appTagline}>grow daily</Text>
+                        </View>
+                    </View>
+
                     <Text style={styles.title}>
                         {isSignUp ? "Start your journey" : "Welcome back"}
                     </Text>
                     <Text style={styles.subtitle}>
-                        {isSignUp ? "Track your resolutions and watch yourself grow" : "Continue building your daily habits"}
+                        {isSignUp 
+                            ? "Track your resolutions and watch yourself grow" 
+                            : "Continue building your daily habits"}
                     </Text>
-
+                </View>
+                
+                <View style={styles.contentContainer}>
+                    {/* Email Input */}
                     <Text style={styles.inputLabel}>Email address</Text>
                     <TextInput
                         style={styles.input}
@@ -97,25 +114,34 @@ export default function AuthScreen() {
                         disabled={isLoading}
                     />  
 
+                    {/* Password Input */}
                     <Text style={styles.inputLabel}>Password</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="••••••••"
                         placeholderTextColor="#ACACAC"
-                        secureTextEntry
+                        secureTextEntry={!showPassword}
                         mode="outlined"
                         outlineColor="#E5E5E5"
                         activeOutlineColor="#7A9B76"
                         outlineStyle={{ borderRadius: 16, borderWidth: 2 }}
                         left={<TextInput.Icon icon="lock-outline" color="#ACACAC" />}
+                        right={
+                            <TextInput.Icon 
+                                icon={showPassword ? "eye-off-outline" : "eye-outline"} 
+                                color="#ACACAC"
+                                onPress={() => setShowPassword(!showPassword)}
+                            />
+                        }
                         theme={{ colors: { background: 'white' }}}
                         value={password}
                         onChangeText={setPassword}
                         disabled={isLoading}
-                    />    
+                    />
                     
-                    {error && <Text style={{ color: theme.colors.error, marginBottom: 8 }}>{error}</Text>}
+                    {error && <Text style={styles.errorText}>{error}</Text>}
                     
+                    {/* Primary Button */}
                     <Button 
                         onPress={handleAuth}
                         mode="contained" 
@@ -129,18 +155,19 @@ export default function AuthScreen() {
                         {isSignUp ? "Sign up" : "Sign in"}
                     </Button>
 
-                    <Button 
-                        mode="text" 
+                    {/* Switch Mode */}
+                    <TouchableOpacity 
                         onPress={handleSwitchMode}
-                        labelStyle={styles.switchButtonLabel}
-                        style={styles.switchButton}
+                        style={styles.switchModeContainer}
                         disabled={isLoading}
                     >
-                        {isSignUp ? "Already have an account? " : "Don't have an account? "}
-                        <Text style={styles.switchButtonHighlight}>
-                            {isSignUp ? "Sign in" : "Sign up"}
+                        <Text style={styles.switchModeText}>
+                            {isSignUp ? "Already have an account? " : "Don't have an account? "}
+                            <Text style={styles.switchModeHighlight}>
+                                {isSignUp ? "Sign in" : "Sign up"}
+                            </Text>
                         </Text>
-                    </Button>
+                    </TouchableOpacity>
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>
@@ -157,6 +184,54 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 32,
     paddingVertical: 20,
+  },
+  logoSection: {
+    marginBottom: 40,
+  },
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 24,
+  },
+  logoBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: "#7A9B76",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#7A9B76",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+    transform: [{ rotate: '3deg' }],
+  },
+  logoEmoji: {
+    fontSize: 28,
+  },
+  appName: {
+    fontSize: 28,
+    fontWeight: "600",
+    color: "#2A2A2A",
+    letterSpacing: -0.5,
+  },
+  appTagline: {
+    fontSize: 12,
+    color: "#8A8A8A",
+    letterSpacing: 0.5,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "500",
+    color: "#2A2A2A",
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#6A6A6A",
+    lineHeight: 24,
   },
   contentContainer: {
     zIndex: 10,
@@ -208,28 +283,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#6B8E9E",
     opacity: 0.35,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "500",
-    color: "#2A2A2A",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#6A6A6A",
-    marginBottom: 32,
-    lineHeight: 24,
-  },
   inputLabel: {
     fontSize: 14,
     fontWeight: "500",
     color: "#6A6A6A",
     marginBottom: 8,
-    marginTop: 4,
+    marginTop: 16,
   },
   input: {
     marginBottom: 16,
     backgroundColor: "white",
+  },
+  errorText: {
+    color: "#D32F2F",
+    marginBottom: 8,
+    fontSize: 14,
   },
   primaryButton: {
     marginTop: 16,
@@ -248,14 +316,15 @@ const styles = StyleSheet.create({
   buttonContent: {
     paddingVertical: 8,
   },
-  switchButton: {
-    marginTop: 16,
+  switchModeContainer: {
+    alignItems: "center",
+    marginTop: 24,
   },
-  switchButtonLabel: {
+  switchModeText: {
     fontSize: 14,
     color: "#6A6A6A",
   },
-  switchButtonHighlight: {
+  switchModeHighlight: {
     color: "#7A9B76",
     fontWeight: "500",
   },
