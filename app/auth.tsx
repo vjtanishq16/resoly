@@ -1,140 +1,150 @@
-import { router } from "expo-router";
-import { useAuth , AuthProvider} from "../lib/auth-context";
+import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, View , StyleSheet, ScrollView} from "react-native";
-import { TextInput, Text, Button  , useTheme} from "react-native-paper";
+import { KeyboardAvoidingView, Platform, View, StyleSheet, ScrollView } from "react-native";
+import { TextInput, Text, Button, useTheme, ActivityIndicator } from "react-native-paper";
 
 export default function AuthScreen() {
     const [isSignUp, setIsSignUp] = useState<boolean>(false);
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const theme = useTheme();
-
     const { signUp, signIn } = useAuth();
+    
     const handleSwitchMode = () => {
         setIsSignUp((prev) => !prev);
+        setError(null);
     }
+    
     const handleAuth = async () => {
-        if(!email || !password) {
+        if (!email || !password) {
             setError("Please fill in all fields");
             return;
         }
-       if(password.length < 6) {
-        setError("Password must be at least 6 characters");
-        return;
-       }
+        if (password.length < 6) {
+            setError("Password must be at least 6 characters");
+            return;
+        }
 
         setError(null);
+        setIsLoading(true);
 
-        if(isSignUp) {
-          const error = await signUp(email, password);
-
-          if(error) {
-            setError(error);
-            return;
-          }
-        }else {
-          const error = await signIn(email, password);
-          if(error) {
-            setError(error);
-            return;
-          }
-
-          // router.replace("/(tabs)/home");
+        if (isSignUp) {
+            const error = await signUp(email, password);
+            if (error) {
+                setError(error);
+            }
+        } else {
+            const error = await signIn(email, password);
+            if (error) {
+                setError(error);
+            }
         }
+        
+        setIsLoading(false);
     };
 
-  return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"} 
-      style={styles.container}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-    >
-      <ScrollView 
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-      {/* Decorative background dots */}
-      <View style={styles.decorativeDot1} />
-      <View style={styles.decorativeDot2} />
-      <View style={styles.decorativeDot3} />
-      
-      <View style={styles.contentContainer}>
-        {/* Title */}
-        <Text style={styles.title}>{isSignUp ? "Start your journey" : "Welcome back"}</Text>
-        <Text style={styles.subtitle}>
-          {isSignUp ? "Track your resolutions and watch yourself grow" : "Continue building your daily habits"}
-        </Text>
-
-        {/* Email Input */}
-        <Text style={styles.inputLabel}>Email address</Text>
-        <TextInput
-        style={styles.input}
-        autoCapitalize="none" 
-        keyboardType="email-address"
-        placeholder="you@example.com"
-        placeholderTextColor="#ACACAC"
-        mode="outlined"
-        outlineColor="#E5E5E5"
-        activeOutlineColor="#7A9B76"
-        outlineStyle={{ borderRadius: 16, borderWidth: 2 }}
-        left={<TextInput.Icon icon="email-outline" color="#ACACAC" />}
-        theme={{ colors: { background: 'white' }}}
-        value={email}
-        onChangeText={setEmail}
-        />  
-
-        {/*Password Input*/}
-        <Text style={styles.inputLabel}>Password</Text>
-        <TextInput
-        style={styles.input}
-        placeholder="••••••••"
-        placeholderTextColor="#ACACAC"
-        secureTextEntry
-        mode="outlined"
-        outlineColor="#E5E5E5"
-        activeOutlineColor="#7A9B76"
-        outlineStyle={{ borderRadius: 16, borderWidth: 2 }}
-        left={<TextInput.Icon icon="lock-outline" color="#ACACAC" />}
-        right={<TextInput.Icon icon="eye-outline" color="#ACACAC" />}
-        theme={{ colors: { background: 'white' }}}
-        value={password}
-        onChangeText={setPassword}
-        />    
-        
-        {error ? <Text style={{ color: theme.colors.error, marginBottom: 8 }}>{error}</Text> : null}
-        
-        {/*Signin/Signup Button*/}
-        <Button 
-          onPress={handleAuth}
-          mode="contained" 
-          style={styles.primaryButton}
-          buttonColor="#7A9B76"
-          labelStyle={styles.primaryButtonLabel}
-          contentStyle={styles.buttonContent}
+    return (
+        <KeyboardAvoidingView 
+            behavior={Platform.OS === "ios" ? "padding" : "height"} 
+            style={styles.container}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
-          {isSignUp ? "Sign up" : "Sign in"}
-        </Button>
+            {/* Loading Overlay */}
+            {isLoading && (
+                <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="large" color="#7A9B76" />
+                    <Text style={styles.loadingText}>
+                        {isSignUp ? "Creating your account..." : "Signing you in..."}
+                    </Text>
+                </View>
+            )}
+            
+            <ScrollView 
+                contentContainerStyle={styles.scrollContainer}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={styles.decorativeDot1} />
+                <View style={styles.decorativeDot2} />
+                <View style={styles.decorativeDot3} />
+                
+                <View style={styles.contentContainer}>
+                    <Text style={styles.title}>
+                        {isSignUp ? "Start your journey" : "Welcome back"}
+                    </Text>
+                    <Text style={styles.subtitle}>
+                        {isSignUp ? "Track your resolutions and watch yourself grow" : "Continue building your daily habits"}
+                    </Text>
 
-        {/* Switch Mode Button */}
-        <Button 
-          mode="text" 
-          onPress={handleSwitchMode}
-          labelStyle={styles.switchButtonLabel}
-          style={styles.switchButton}
-        >
-          {isSignUp ? "Already have an account? " : "Don't have an account? "}
-          <Text style={styles.switchButtonHighlight}>
-            {isSignUp ? "Sign in" : "Sign up"}
-          </Text>
-        </Button>
-      </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  );
+                    <Text style={styles.inputLabel}>Email address</Text>
+                    <TextInput
+                        style={styles.input}
+                        autoCapitalize="none" 
+                        keyboardType="email-address"
+                        placeholder="you@example.com"
+                        placeholderTextColor="#ACACAC"
+                        mode="outlined"
+                        outlineColor="#E5E5E5"
+                        activeOutlineColor="#7A9B76"
+                        outlineStyle={{ borderRadius: 16, borderWidth: 2 }}
+                        left={<TextInput.Icon icon="email-outline" color="#ACACAC" />}
+                        theme={{ colors: { background: 'white' }}}
+                        value={email}
+                        onChangeText={setEmail}
+                        disabled={isLoading}
+                    />  
+
+                    <Text style={styles.inputLabel}>Password</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="••••••••"
+                        placeholderTextColor="#ACACAC"
+                        secureTextEntry
+                        mode="outlined"
+                        outlineColor="#E5E5E5"
+                        activeOutlineColor="#7A9B76"
+                        outlineStyle={{ borderRadius: 16, borderWidth: 2 }}
+                        left={<TextInput.Icon icon="lock-outline" color="#ACACAC" />}
+                        theme={{ colors: { background: 'white' }}}
+                        value={password}
+                        onChangeText={setPassword}
+                        disabled={isLoading}
+                    />    
+                    
+                    {error && <Text style={{ color: theme.colors.error, marginBottom: 8 }}>{error}</Text>}
+                    
+                    <Button 
+                        onPress={handleAuth}
+                        mode="contained" 
+                        style={styles.primaryButton}
+                        buttonColor="#7A9B76"
+                        labelStyle={styles.primaryButtonLabel}
+                        contentStyle={styles.buttonContent}
+                        loading={isLoading}
+                        disabled={isLoading}
+                    >
+                        {isSignUp ? "Sign up" : "Sign in"}
+                    </Button>
+
+                    <Button 
+                        mode="text" 
+                        onPress={handleSwitchMode}
+                        labelStyle={styles.switchButtonLabel}
+                        style={styles.switchButton}
+                        disabled={isLoading}
+                    >
+                        {isSignUp ? "Already have an account? " : "Don't have an account? "}
+                        <Text style={styles.switchButtonHighlight}>
+                            {isSignUp ? "Sign in" : "Sign up"}
+                        </Text>
+                    </Button>
+                </View>
+            </ScrollView>
+        </KeyboardAvoidingView>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -151,7 +161,23 @@ const styles = StyleSheet.create({
   contentContainer: {
     zIndex: 10,
   },
-  // Decorative dots matching the design
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(245, 243, 238, 0.95)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6A6A6A",
+    fontWeight: "500",
+  },
   decorativeDot1: {
     position: "absolute",
     top: 80,
@@ -233,4 +259,4 @@ const styles = StyleSheet.create({
     color: "#7A9B76",
     fontWeight: "500",
   },
-})
+});

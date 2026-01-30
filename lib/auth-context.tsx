@@ -1,18 +1,21 @@
-import { createContext, use, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { ID, Models } from "react-native-appwrite";
 import { account } from "./appwrite";
 
 type AuthContextType = {
     user : Models.User<Models.Preferences> | null;
-    isLoadingUser?: boolean;
-    signUp: (email: string, password: string) => Promise<string | void>;
-    signIn: (email: string, password: string) => Promise<string |  void>;
-    signOut?: () => Promise<void>;
+    isLoadingUser: boolean;
+    signUp: (email: string, password: string) => Promise<string | null>;
+    signIn: (email: string, password: string) => Promise<string | null>;
+    signOut: () => Promise<void>;
 };
+
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
     const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
+    
     useEffect(() => {
         getUser();
     }, []);
@@ -28,29 +31,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-
     const signUp = async (email: string, password: string) => {
-       try {
-           await account.create(ID.unique(), email, password);
-           await signIn(email, password);
-       } catch (error) {
-        if (error instanceof Error) {
-            return error.message;
+        try {
+            await account.create(ID.unique(), email, password);
+            // Sign in after creating account
+            const signInError = await signIn(email, password);
+            return signInError;
+        } catch (error) {
+            if (error instanceof Error) {
+                return error.message;
+            }
+            return "Sign-up failed";
         }
-           return "Sign-up failed";
-       }
     };
 
     const signIn = async (email: string, password: string) => {
         try {
-           await account.createEmailPasswordSession( email, password);
-           await getUser();
-       } catch (error) {
-        if (error instanceof Error) {
-            return error.message;
+            // Delete any existing session first
+            try {
+                await account.deleteSession("current");
+            } catch {
+                // No existing session, continue
+            }
+            
+            // Create new session
+            await account.createEmailPasswordSession(email, password);
+            await getUser();
+            return null;
+        } catch (error) {
+            if (error instanceof Error) {
+                return error.message;
+            }
+            return "An error occurred during sign-in";
         }
-           return "An error occurred during sign-in";
-       }
     };
     
     const signOut = async () => {
@@ -62,9 +75,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    return (<AuthContext.Provider value={{ isLoadingUser, user, signUp, signIn, signOut }}>
-      {children}
-    </AuthContext.Provider>);
+    return (
+        <AuthContext.Provider value={{ user, isLoadingUser, signUp, signIn, signOut }}>
+            {children}
+        </AuthContext.Provider>
+    );
 }
 
 export function useAuth() {
@@ -74,4 +89,3 @@ export function useAuth() {
     }
     return context;
 }
-// auth 
