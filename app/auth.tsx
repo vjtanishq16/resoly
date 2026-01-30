@@ -1,14 +1,62 @@
+import { router } from "expo-router";
+import { useAuth , AuthProvider} from "../lib/auth-context";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, View , StyleSheet} from "react-native";
-import { TextInput, Text, Button } from "react-native-paper";
+import { KeyboardAvoidingView, Platform, View , StyleSheet, ScrollView} from "react-native";
+import { TextInput, Text, Button  , useTheme} from "react-native-paper";
 
 export default function AuthScreen() {
     const [isSignUp, setIsSignUp] = useState<boolean>(false);
+    const [email, setEmail] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+    const [error, setError] = useState<string | null>(null);
+
+    const theme = useTheme();
+
+    const { signUp, signIn } = useAuth();
     const handleSwitchMode = () => {
         setIsSignUp((prev) => !prev);
     }
+    const handleAuth = async () => {
+        if(!email || !password) {
+            setError("Please fill in all fields");
+            return;
+        }
+       if(password.length < 6) {
+        setError("Password must be at least 6 characters");
+        return;
+       }
+
+        setError(null);
+
+        if(isSignUp) {
+          const error = await signUp(email, password);
+
+          if(error) {
+            setError(error);
+            return;
+          }
+        }else {
+          const error = await signIn(email, password);
+          if(error) {
+            setError(error);
+            return;
+          }
+
+          // router.replace("/(tabs)/home");
+        }
+    };
+
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"} 
+      style={styles.container}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
       {/* Decorative background dots */}
       <View style={styles.decorativeDot1} />
       <View style={styles.decorativeDot2} />
@@ -35,6 +83,8 @@ export default function AuthScreen() {
         outlineStyle={{ borderRadius: 16, borderWidth: 2 }}
         left={<TextInput.Icon icon="email-outline" color="#ACACAC" />}
         theme={{ colors: { background: 'white' }}}
+        value={email}
+        onChangeText={setEmail}
         />  
 
         {/*Password Input*/}
@@ -51,12 +101,16 @@ export default function AuthScreen() {
         left={<TextInput.Icon icon="lock-outline" color="#ACACAC" />}
         right={<TextInput.Icon icon="eye-outline" color="#ACACAC" />}
         theme={{ colors: { background: 'white' }}}
+        value={password}
+        onChangeText={setPassword}
         />    
-
+        
+        {error ? <Text style={{ color: theme.colors.error, marginBottom: 8 }}>{error}</Text> : null}
+        
         {/*Signin/Signup Button*/}
         <Button 
+          onPress={handleAuth}
           mode="contained" 
-          onPress={() => {}} 
           style={styles.primaryButton}
           buttonColor="#7A9B76"
           labelStyle={styles.primaryButtonLabel}
@@ -78,6 +132,7 @@ export default function AuthScreen() {
           </Text>
         </Button>
       </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -86,9 +141,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F3EE",
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: "center",
     paddingHorizontal: 32,
-    position: "relative",
+    paddingVertical: 20,
   },
   contentContainer: {
     zIndex: 10,
