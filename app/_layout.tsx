@@ -23,7 +23,7 @@ export default function RootLayout() {
     <AuthProvider>
     <RouteGuard>
     <Stack>
-        {/* <Stack.Screen name="auth" options={{ headerShown: true }} /> */}
+        <Stack.Screen name="auth" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
     </RouteGuard>

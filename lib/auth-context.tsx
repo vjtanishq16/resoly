@@ -7,6 +7,7 @@ type AuthContextType = {
     isLoadingUser?: boolean;
     signUp: (email: string, password: string) => Promise<string | void>;
     signIn: (email: string, password: string) => Promise<string |  void>;
+    signOut?: () => Promise<void>;
 };
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -52,7 +53,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
        }
     };
     
-    return (<AuthContext.Provider value={{ isLoadingUser, user, signUp, signIn }}>
+    const signOut = async () => {
+        try {
+            await account.deleteSession("current");
+            setUser(null);
+        } catch (error) {
+            console.error("Sign-out failed", error);
+        }
+    };
+
+    return (<AuthContext.Provider value={{ isLoadingUser, user, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>);
 }
