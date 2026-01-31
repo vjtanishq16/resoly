@@ -4,22 +4,25 @@ import Octicons from '@expo/vector-icons/Octicons';
 
 export default function TabsLayout() {
   return (
-  <Tabs screenOptions={{ tabBarActiveTintColor: 'green' }}>
+  <Tabs screenOptions={{ headerStyle: { backgroundColor: '#E6F4FE' },
+   headerTitleStyle: { color: '#2A2A2A', fontWeight: '600' },
+   tabBarActiveTintColor: '#7A9B76',
+   tabBarInactiveTintColor: '#6A6A6A',
+   tabBarStyle: { backgroundColor: '#F5F3EE', borderTopWidth: 0 },
+  }}  >
   <Tabs.Screen 
     name="index"
-      options={{ title: "Home"  , 
-      tabBarIcon: ({ color , focused}) =>{
-        return focused ? <Octicons name="home-fill" size={24} color={color} /> :    
-       <Octicons name="home" size={24} color={color} />
+      options={{ title: "Today's Goals"  , 
+      tabBarIcon: ({ color , size }) =>{
+        return <Octicons name="goal" size={size} color={color} />
       },
         }} />
   <Tabs.Screen 
-    name="login" 
+    name="streaks" 
     options={{ 
-      title: "Login",
-      tabBarIcon: ({ color, focused }) => {
-        return focused ? <Octicons name="person-fill" size={24} color={color} /> :
-          <Octicons name="person" size={24} color={color} />
+      title: "Streaks",
+      tabBarIcon: ({ color, size }) => {
+        return <Octicons name="person" size={size} color={color} />
       }
     }} />
   </Tabs>);

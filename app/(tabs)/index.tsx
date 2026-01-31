@@ -2,10 +2,42 @@ import { Text, View, StyleSheet } from "react-native";
 import { Button, ActivityIndicator } from "react-native-paper";
 import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
+import { createResolution, getActiveResolutions } from "@/lib/database";
 
 export default function Index() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+
+  // Test creating a resolution
+  const testDatabase = async () => {
+    if (!user) return;
+    
+    setIsTesting(true);
+    try {
+      // Create a test resolution
+      const resolution = await createResolution(user.$id, {
+        title: "Learn React Native",
+        category: "Learning",
+        color: "#7A9B76",
+        plannedMinutesPerDay: 60,
+        icon: "📚"
+      });
+      
+      console.log("✅ Resolution created:", resolution);
+      
+      // Get all resolutions
+      const resolutions = await getActiveResolutions(user.$id);
+      console.log("✅ Active resolutions:", resolutions);
+      
+      alert(`✅ Success! Created resolution. Total: ${resolutions.length}`);
+    } catch (error) {
+      console.error("❌ Database error:", error);
+      alert("❌ Error: " + (error as Error).message);
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -24,8 +56,22 @@ export default function Index() {
           <Text style={styles.loadingText}>Signing you out...</Text>
         </View>
       )}
-      
+
       <Text style={styles.greeting}>Hi there</Text>
+      
+      {/* Test Database Button */}
+      <Button 
+        mode="contained" 
+        icon={"database"} 
+        onPress={testDatabase}
+        loading={isTesting}
+        disabled={isTesting}
+        buttonColor="#7A9B76"
+        style={styles.testButton}
+      >
+        Test Database
+      </Button>
+
       <Button 
         mode="contained" 
         icon={"logout"} 
@@ -53,6 +99,11 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#2A2A2A",
     marginBottom: 24,
+  },
+  testButton: {
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    marginBottom: 16,
   },
   signOutButton: {
     paddingHorizontal: 24,

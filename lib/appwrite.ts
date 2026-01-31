@@ -9,3 +9,10 @@ client
 
 export const account = new Account(client);
 export const databases = new Databases(client);
+
+// Database IDs
+export const DATABASE_ID = process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID!;
+export const COLLECTIONS = {
+  RESOLUTIONS: process.env.EXPO_PUBLIC_APPWRITE_RESOLUTIONS_COLLECTION_ID!,
+  DAILY_LOGS: process.env.EXPO_PUBLIC_APPWRITE_LOGS_COLLECTION_ID!,
+};
