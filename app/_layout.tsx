@@ -20,7 +20,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
       if (!user && !inAuthGroup) {
         await router.replace('/auth');
       } else if (user && inAuthGroup) {
-        await router.replace('/(tabs)');
+        await router.replace('/');
       }
       
       setIsNavigating(false);
@@ -46,7 +46,26 @@ export default function RootLayout() {
       <RouteGuard>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="auth" />
-          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="index" />
+          <Stack.Screen 
+            name="add-resolution" 
+            options={{
+              presentation: 'modal',
+              headerShown: true,
+              headerTitle: '',
+              headerStyle: { backgroundColor: '#F5F3EE' },
+            }}
+          />
+          <Stack.Screen 
+            name="log-time" 
+            options={{
+              presentation: 'modal',
+              headerShown: true,
+              headerTitle: '',
+              headerStyle: { backgroundColor: '#F5F3EE' },
+            }}
+          />
+          <Stack.Screen name="profile" />
         </Stack>
       </RouteGuard>
     </AuthProvider>
