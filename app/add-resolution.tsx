@@ -253,6 +253,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 12,
+    justifyContent: "center",
   },
   categoryButton: {
     width: "30%",
@@ -263,6 +264,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 2,
     borderColor: "transparent",
+    paddingVertical: 12,
   },
   categoryButtonSelected: {
     borderColor: "#7A9B76",
@@ -271,7 +273,7 @@ const styles = StyleSheet.create({
   categoryLabel: {
     fontSize: 12,
     color: "#6A6A6A",
-    marginTop: 4,
+    marginTop: 6,
   },
   categoryLabelSelected: {
     color: "#7A9B76",

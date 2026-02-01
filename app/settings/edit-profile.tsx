@@ -6,10 +6,10 @@ import { useTheme } from '@/app/contexts/ThemeContext';
 import { useRouter } from 'expo-router';
 
 export default function EditProfileScreen() {
-  const { userProfile, updateUserName } = useAuth();
+  const { user, updateUserName } = useAuth();
   const { colors } = useTheme();
   const router = useRouter();
-  const [name, setName] = useState(userProfile?.name || '');
+  const [name, setName] = useState(user?.name || '');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);

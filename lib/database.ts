@@ -1,5 +1,6 @@
 import { databases, DATABASE_ID, COLLECTIONS } from './appwrite';
 import { ID, Query } from 'react-native-appwrite';
+import { sendAchievementNotification, checkForMilestone } from './notifications';
 
 // Types
 export type Resolution = {
@@ -266,6 +267,23 @@ export async function logTime(
           loggedAt: new Date().toISOString(),
         }
       );
+    }
+
+    // Check for milestone achievements and send notification
+    try {
+      const streak = await calculateStreak(userId, resolutionId);
+      const milestone = checkForMilestone(streak);
+      if (milestone) {
+        // Get resolution title for notification
+        const resolution = await databases.getDocument(
+          DATABASE_ID,
+          COLLECTIONS.RESOLUTIONS,
+          resolutionId
+        );
+        await sendAchievementNotification(resolution.title, milestone);
+      }
+    } catch (notifError) {
+      console.log('Error sending achievement notification:', notifError);
     }
 
     return {

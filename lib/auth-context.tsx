@@ -3,6 +3,7 @@ import { ID, Models, OAuthProvider } from "react-native-appwrite";
 import { account } from "./appwrite";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
+import { initializeNotifications } from "./notifications";
 
 type AuthContextType = {
     user: Models.User<Models.Preferences> | null;
@@ -35,6 +36,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const currentUser = await account.get();
             setUser(currentUser);
             setIsEmailVerified(currentUser.emailVerification);
+            // Initialize notifications for logged in user (fails silently if not available)
+            try {
+                await initializeNotifications(currentUser.$id);
+            } catch (notifError) {
+                console.log('Notifications not available:', notifError);
+            }
         } catch (error) {
             setUser(null);
             setIsEmailVerified(false);
