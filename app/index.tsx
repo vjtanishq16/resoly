@@ -1,20 +1,23 @@
 import { Text, View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Platform, StatusBar } from "react-native";
 import { ActivityIndicator, FAB } from "react-native-paper";
 import { useAuth } from "@/lib/auth-context";
+import { useTheme } from "@/app/contexts/ThemeContext";
 import { useState, useEffect } from "react";
-import { getActiveResolutions, getTodayLogs } from "@/lib/database";
+import { getActiveResolutions, getTodayLogs, calculateStreak } from "@/lib/database";
 import type { Resolution, DailyLog } from "@/lib/database";
 import ResolutionCard from "./components/ResolutionCard";
-import LogTimeModal from "@/app/log-time";
+import LogTimeModal from "./log-time";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function Index() {
   const { signOut, user } = useAuth();
+  const { colors } = useTheme();
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [resolutions, setResolutions] = useState<Resolution[]>([]);
   const [todayLogs, setTodayLogs] = useState<DailyLog[]>([]);
+  const [streaks, setStreaks] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [logTimeModal, setLogTimeModal] = useState<{
@@ -33,6 +36,19 @@ export default function Index() {
       
       setResolutions(fetchedResolutions);
       setTodayLogs(fetchedLogs);
+
+      // Calculate streaks for all resolutions
+      const streakPromises = fetchedResolutions.map(async (r) => {
+        const streak = await calculateStreak(user.$id, r.$id);
+        return { id: r.$id, streak };
+      });
+
+      const streakResults = await Promise.all(streakPromises);
+      const streaksMap: Record<string, number> = {};
+      streakResults.forEach(({ id, streak }) => {
+        streaksMap[id] = streak;
+      });
+      setStreaks(streaksMap);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -56,7 +72,7 @@ export default function Index() {
   };
 
   const getStreak = (resolutionId: string) => {
-    return 0;
+    return streaks[resolutionId] || 0;
   };
 
   const totalActual = resolutions.reduce(
@@ -89,7 +105,7 @@ export default function Index() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7A9B76" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading your resolutions...</Text>
       </View>
     );
@@ -99,7 +115,7 @@ export default function Index() {
     <View style={styles.container}>
       {isSigningOut && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#7A9B76" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Signing you out...</Text>
         </View>
       )}
@@ -112,13 +128,13 @@ export default function Index() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#7A9B76"
-            colors={["#7A9B76"]}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
       >
         {/* Hero Card - Full Width */}
-        <View style={styles.heroCard}>
+        <View style={[styles.heroCard, { backgroundColor: colors.primary }]}>
           <View style={styles.decorativeCircle1} />
           <View style={styles.decorativeCircle2} />
           <View style={styles.decorativeCircle3} />
@@ -187,7 +203,7 @@ export default function Index() {
                   streak: getStreak(resolution.$id),
                 }}
                 isFirst={index === 0}
-                onPress={() => console.log("View details:", resolution.title)}
+                onPress={() => router.push(`/resolution-details?id=${resolution.$id}`)}
                 onLogTime={() => {
                   setLogTimeModal({
                     visible: true,
@@ -209,7 +225,7 @@ export default function Index() {
       {/* Floating Add Button */}
       <FAB
         icon="plus"
-        style={styles.fab}
+        style={[styles.fab, { backgroundColor: colors.primary }]}
         color="#FFFFFF"
         onPress={() => router.push('/add-resolution')}
       />
@@ -249,7 +265,6 @@ const styles = StyleSheet.create({
   },
   
   heroCard: {
-    backgroundColor: "#7A9B76",
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
     marginBottom: 24,
@@ -412,7 +427,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 20,
     bottom: 20,
-    backgroundColor: "#7A9B76",
     borderRadius: 28,
   },
   

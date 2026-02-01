@@ -1,11 +1,11 @@
-import { ID, Query } from "react-native-appwrite";
-import { databases, DATABASE_ID, COLLECTIONS } from "./appwrite";
+import { databases, DATABASE_ID, COLLECTIONS } from './appwrite';
+import { ID, Query } from 'react-native-appwrite';
 
-// Resolution type
+// Types
 export type Resolution = {
   $id: string;
   title: string;
-  category: "Learning" | "Health" | "Creative" | "Fitness" | "Mindful" | "Tech" | "Music";
+  category: string;
   color: string;
   plannedMinutesPerDay: number;
   userId: string;
@@ -14,7 +14,6 @@ export type Resolution = {
   icon?: string;
 };
 
-// Daily log type
 export type DailyLog = {
   $id: string;
   resolutionId: string;
@@ -25,29 +24,44 @@ export type DailyLog = {
   loggedAt: string;
 };
 
-// ============ RESOLUTIONS ============
+// Resolution Functions
 
-// Get all active resolutions for user
-export const getActiveResolutions = async (userId: string): Promise<Resolution[]> => {
+/**
+ * Get all active resolutions for a user
+ */
+export async function getActiveResolutions(userId: string): Promise<Resolution[]> {
   try {
     const response = await databases.listDocuments(
       DATABASE_ID,
       COLLECTIONS.RESOLUTIONS,
       [
-        Query.equal("userId", userId),
-        Query.equal("isActive", true),
-        Query.orderDesc("startDate"),
+        Query.equal('userId', userId),
+        Query.equal('isActive', true),
+        Query.orderDesc('startDate')
       ]
     );
-    return response.documents as unknown as Resolution[];
-  } catch (error) {
-    console.error("Error fetching resolutions:", error);
-    throw error;
-  }
-};
 
-// Create a new resolution
-export const createResolution = async (
+    return response.documents.map(doc => ({
+      $id: doc.$id,
+      title: doc.title,
+      category: doc.category,
+      color: doc.color,
+      plannedMinutesPerDay: doc.plannedMinutesPerDay,
+      userId: doc.userId,
+      isActive: doc.isActive,
+      startDate: doc.startDate,
+      icon: doc.icon,
+    }));
+  } catch (error) {
+    console.error('Error fetching active resolutions:', error);
+    return [];
+  }
+}
+
+/**
+ * Create a new resolution
+ */
+export async function createResolution(
   userId: string,
   data: {
     title: string;
@@ -56,9 +70,9 @@ export const createResolution = async (
     plannedMinutesPerDay: number;
     icon?: string;
   }
-): Promise<Resolution> => {
+): Promise<Resolution> {
   try {
-    const response = await databases.createDocument(
+    const doc = await databases.createDocument(
       DATABASE_ID,
       COLLECTIONS.RESOLUTIONS,
       ID.unique(),
@@ -68,152 +82,178 @@ export const createResolution = async (
         category: data.category,
         color: data.color,
         plannedMinutesPerDay: data.plannedMinutesPerDay,
-        icon: data.icon || "📚",
         isActive: true,
         startDate: new Date().toISOString(),
+        icon: data.icon || '📚',
       }
     );
-    return response as unknown as Resolution;
+
+    return {
+      $id: doc.$id,
+      title: doc.title,
+      category: doc.category,
+      color: doc.color,
+      plannedMinutesPerDay: doc.plannedMinutesPerDay,
+      userId: doc.userId,
+      isActive: doc.isActive,
+      startDate: doc.startDate,
+      icon: doc.icon,
+    };
   } catch (error) {
-    console.error("Error creating resolution:", error);
+    console.error('Error creating resolution:', error);
     throw error;
   }
-};
+}
 
-// Update resolution
-export const updateResolution = async (
+/**
+ * Update a resolution
+ */
+export async function updateResolution(
   resolutionId: string,
-  data: Partial<Omit<Resolution, "$id" | "userId">>
-): Promise<Resolution> => {
-  try {
-    const response = await databases.updateDocument(
-      DATABASE_ID,
-      COLLECTIONS.RESOLUTIONS,
-      resolutionId,
-      data
-    );
-    return response as unknown as Resolution;
-  } catch (error) {
-    console.error("Error updating resolution:", error);
-    throw error;
-  }
-};
-
-// Delete resolution (soft delete - set isActive to false)
-export const deleteResolution = async (resolutionId: string): Promise<void> => {
+  data: Partial<{
+    title: string;
+    category: string;
+    color: string;
+    plannedMinutesPerDay: number;
+    isActive: boolean;
+  }>
+): Promise<void> {
   try {
     await databases.updateDocument(
       DATABASE_ID,
       COLLECTIONS.RESOLUTIONS,
       resolutionId,
-      { isActive: false }
+      data
     );
   } catch (error) {
-    console.error("Error deleting resolution:", error);
+    console.error('Error updating resolution:', error);
     throw error;
   }
-};
+}
 
-// Get a single resolution by ID
-export const getResolution = async (resolutionId: string): Promise<Resolution> => {
+/**
+ * Delete a resolution
+ */
+export async function deleteResolution(resolutionId: string): Promise<void> {
   try {
-    const response = await databases.getDocument(
+    await databases.deleteDocument(
       DATABASE_ID,
       COLLECTIONS.RESOLUTIONS,
       resolutionId
     );
-    return response as unknown as Resolution;
   } catch (error) {
-    console.error("Error fetching resolution:", error);
+    console.error('Error deleting resolution:', error);
     throw error;
   }
-};
+}
 
-// ============ DAILY LOGS ============
+// Daily Log Functions
 
-// Get today's logs for user
-export const getTodayLogs = async (userId: string): Promise<DailyLog[]> => {
-  const today = new Date().toISOString().split("T")[0]; // "2026-01-31"
-  
+/**
+ * Get today's logs for a user
+ */
+export async function getTodayLogs(userId: string): Promise<DailyLog[]> {
   try {
+    const today = new Date().toISOString().split('T')[0];
+    
     const response = await databases.listDocuments(
       DATABASE_ID,
       COLLECTIONS.DAILY_LOGS,
       [
-        Query.equal("userId", userId),
-        Query.equal("date", today),
+        Query.equal('userId', userId),
+        Query.equal('date', today)
       ]
     );
-    return response.documents as unknown as DailyLog[];
-  } catch (error) {
-    console.error("Error fetching today's logs:", error);
-    throw error;
-  }
-};
 
-// Get logs for a specific resolution (last 30 days)
-export const getResolutionLogs = async (
-  resolutionId: string,
-  days: number = 30
-): Promise<DailyLog[]> => {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  const dateStr = startDate.toISOString().split("T")[0];
-  
-  try {
-    const response = await databases.listDocuments(
-      DATABASE_ID,
-      COLLECTIONS.DAILY_LOGS,
-      [
-        Query.equal("resolutionId", resolutionId),
-        Query.greaterThanEqual("date", dateStr),
-        Query.orderDesc("date"),
-      ]
-    );
-    return response.documents as unknown as DailyLog[];
+    return response.documents.map(doc => ({
+      $id: doc.$id,
+      resolutionId: doc.resolutionId,
+      userId: doc.userId,
+      date: doc.date,
+      actualMinutes: doc.actualMinutes,
+      note: doc.note,
+      loggedAt: doc.loggedAt,
+    }));
   } catch (error) {
-    console.error("Error fetching resolution logs:", error);
-    throw error;
+    console.error('Error fetching today logs:', error);
+    return [];
   }
-};
+}
 
-// Log time for a resolution
-export const logTime = async (
+/**
+ * Get logs for a specific resolution
+ */
+export async function getResolutionLogs(
   userId: string,
   resolutionId: string,
-  minutes: number,
-  note?: string
-): Promise<DailyLog> => {
-  const today = new Date().toISOString().split("T")[0];
-  
+  limit: number = 30
+): Promise<DailyLog[]> {
   try {
-    // Check if log already exists for today
-    const existing = await databases.listDocuments(
+    const response = await databases.listDocuments(
       DATABASE_ID,
       COLLECTIONS.DAILY_LOGS,
       [
-        Query.equal("userId", userId),
-        Query.equal("resolutionId", resolutionId),
-        Query.equal("date", today),
+        Query.equal('userId', userId),
+        Query.equal('resolutionId', resolutionId),
+        Query.orderDesc('date'),
+        Query.limit(limit)
       ]
     );
-    
-    if (existing.documents.length > 0) {
+
+    return response.documents.map(doc => ({
+      $id: doc.$id,
+      resolutionId: doc.resolutionId,
+      userId: doc.userId,
+      date: doc.date,
+      actualMinutes: doc.actualMinutes,
+      note: doc.note,
+      loggedAt: doc.loggedAt,
+    }));
+  } catch (error) {
+    console.error('Error fetching resolution logs:', error);
+    return [];
+  }
+}
+
+/**
+ * Log time for a resolution
+ */
+export async function logTime(
+  userId: string,
+  resolutionId: string,
+  actualMinutes: number,
+  note?: string
+): Promise<DailyLog> {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    // Check if log already exists for today
+    const existingLogs = await databases.listDocuments(
+      DATABASE_ID,
+      COLLECTIONS.DAILY_LOGS,
+      [
+        Query.equal('userId', userId),
+        Query.equal('resolutionId', resolutionId),
+        Query.equal('date', today)
+      ]
+    );
+
+    let doc;
+    if (existingLogs.documents.length > 0) {
       // Update existing log
-      const response = await databases.updateDocument(
+      doc = await databases.updateDocument(
         DATABASE_ID,
         COLLECTIONS.DAILY_LOGS,
-        existing.documents[0].$id,
+        existingLogs.documents[0].$id,
         {
-          actualMinutes: minutes,
-          note: note || "",
+          actualMinutes,
+          note: note || null,
           loggedAt: new Date().toISOString(),
         }
       );
-      return response as unknown as DailyLog;
     } else {
       // Create new log
-      const response = await databases.createDocument(
+      doc = await databases.createDocument(
         DATABASE_ID,
         COLLECTIONS.DAILY_LOGS,
         ID.unique(),
@@ -221,74 +261,226 @@ export const logTime = async (
           userId,
           resolutionId,
           date: today,
-          actualMinutes: minutes,
-          note: note || "",
+          actualMinutes,
+          note: note || null,
           loggedAt: new Date().toISOString(),
         }
       );
-      return response as unknown as DailyLog;
     }
+
+    return {
+      $id: doc.$id,
+      resolutionId: doc.resolutionId,
+      userId: doc.userId,
+      date: doc.date,
+      actualMinutes: doc.actualMinutes,
+      note: doc.note,
+      loggedAt: doc.loggedAt,
+    };
   } catch (error) {
-    console.error("Error logging time:", error);
+    console.error('Error logging time:', error);
     throw error;
   }
-};
+}
 
-// Simplified function for logging resolution time
-export const logResolutionTime = async (
-  resolutionId: string,
-  minutes: number,
-  note?: string
-): Promise<DailyLog> => {
-  const today = new Date().toISOString().split("T")[0];
-  
+/**
+ * Calculate streak for a resolution
+ * A streak is consecutive days where actualMinutes >= plannedMinutes
+ */
+export async function calculateStreak(
+  userId: string,
+  resolutionId: string
+): Promise<number> {
   try {
-    // Get the resolution to find userId
-    const resolution = await getResolution(resolutionId);
-    
-    // Check if log already exists for today
-    const existing = await databases.listDocuments(
+    const resolution = await databases.getDocument(
+      DATABASE_ID,
+      COLLECTIONS.RESOLUTIONS,
+      resolutionId
+    );
+
+    const startDate = new Date(resolution.startDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Get all logs for this resolution, sorted by date descending
+    const logs = await databases.listDocuments(
       DATABASE_ID,
       COLLECTIONS.DAILY_LOGS,
       [
-        Query.equal("resolutionId", resolutionId),
-        Query.equal("date", today),
+        Query.equal('userId', userId),
+        Query.equal('resolutionId', resolutionId),
+        Query.orderDesc('date'),
+        Query.limit(100), // Last 100 days should be enough
       ]
     );
-    
-    if (existing.documents.length > 0) {
-      // Add to existing log
-      const currentMinutes = existing.documents[0].actualMinutes || 0;
-      const response = await databases.updateDocument(
-        DATABASE_ID,
-        COLLECTIONS.DAILY_LOGS,
-        existing.documents[0].$id,
-        {
-          actualMinutes: currentMinutes + minutes,
-          note: note || existing.documents[0].note || "",
-          loggedAt: new Date().toISOString(),
-        }
-      );
-      return response as unknown as DailyLog;
-    } else {
-      // Create new log
-      const response = await databases.createDocument(
-        DATABASE_ID,
-        COLLECTIONS.DAILY_LOGS,
-        ID.unique(),
-        {
-          userId: resolution.userId,
-          resolutionId,
-          date: today,
-          actualMinutes: minutes,
-          note: note || "",
-          loggedAt: new Date().toISOString(),
-        }
-      );
-      return response as unknown as DailyLog;
+
+    if (logs.documents.length === 0) return 0;
+
+    let streak = 0;
+    let checkDate = new Date(today);
+
+    // Start from today and go backwards
+    for (let i = 0; i < 100; i++) {
+      const dateStr = checkDate.toISOString().split('T')[0];
+
+      // Find log for this date
+      const log = logs.documents.find((l) => l.date === dateStr);
+
+      if (log && log.actualMinutes >= resolution.plannedMinutesPerDay) {
+        streak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else if (dateStr === today.toISOString().split('T')[0]) {
+        // If today is incomplete, don't break the streak yet
+        checkDate.setDate(checkDate.getDate() - 1);
+        continue;
+      } else {
+        // Streak is broken
+        break;
+      }
+
+      // Don't go before the resolution start date
+      if (checkDate < startDate) break;
     }
+
+    return streak;
   } catch (error) {
-    console.error("Error logging resolution time:", error);
-    throw error;
+    console.error('Error calculating streak:', error);
+    return 0;
   }
-};
+}
+
+/**
+ * Get logs for a specific date range
+ */
+export async function getLogsInRange(
+  userId: string,
+  resolutionId: string,
+  startDate: string,
+  endDate: string
+): Promise<DailyLog[]> {
+  try {
+    const response = await databases.listDocuments(
+      DATABASE_ID,
+      COLLECTIONS.DAILY_LOGS,
+      [
+        Query.equal('userId', userId),
+        Query.equal('resolutionId', resolutionId),
+        Query.greaterThanEqual('date', startDate),
+        Query.lessThanEqual('date', endDate),
+        Query.orderDesc('date'),
+      ]
+    );
+
+    return response.documents.map((doc) => ({
+      $id: doc.$id,
+      resolutionId: doc.resolutionId,
+      userId: doc.userId,
+      date: doc.date,
+      actualMinutes: doc.actualMinutes,
+      note: doc.note,
+      loggedAt: doc.loggedAt,
+    }));
+  } catch (error) {
+    console.error('Error fetching logs in range:', error);
+    return [];
+  }
+}
+
+/**
+ * Get all logs for a resolution (for history view)
+ */
+export async function getAllResolutionLogs(
+  userId: string,
+  resolutionId: string
+): Promise<DailyLog[]> {
+  try {
+    const response = await databases.listDocuments(
+      DATABASE_ID,
+      COLLECTIONS.DAILY_LOGS,
+      [
+        Query.equal('userId', userId),
+        Query.equal('resolutionId', resolutionId),
+        Query.orderDesc('date'),
+        Query.limit(100),
+      ]
+    );
+
+    return response.documents.map((doc) => ({
+      $id: doc.$id,
+      resolutionId: doc.resolutionId,
+      userId: doc.userId,
+      date: doc.date,
+      actualMinutes: doc.actualMinutes,
+      note: doc.note,
+      loggedAt: doc.loggedAt,
+    }));
+  } catch (error) {
+    console.error('Error fetching all resolution logs:', error);
+    return [];
+  }
+}
+
+/**
+ * Get total stats for a user
+ */
+export async function getUserStats(userId: string): Promise<{
+  totalResolutions: number;
+  activeResolutions: number;
+  totalMinutesLogged: number;
+  totalDaysLogged: number;
+  longestStreak: number;
+}> {
+  try {
+    const [allResolutions, allLogs] = await Promise.all([
+      databases.listDocuments(
+        DATABASE_ID,
+        COLLECTIONS.RESOLUTIONS,
+        [Query.equal('userId', userId)]
+      ),
+      databases.listDocuments(
+        DATABASE_ID,
+        COLLECTIONS.DAILY_LOGS,
+        [Query.equal('userId', userId), Query.limit(1000)]
+      ),
+    ]);
+
+    const activeResolutions = allResolutions.documents.filter(
+      (r) => r.isActive
+    ).length;
+
+    const totalMinutesLogged = allLogs.documents.reduce(
+      (sum, log) => sum + log.actualMinutes,
+      0
+    );
+
+    // Get unique dates
+    const uniqueDates = new Set(allLogs.documents.map((log) => log.date));
+    const totalDaysLogged = uniqueDates.size;
+
+    // Calculate longest streak (simplified - you can improve this)
+    let longestStreak = 0;
+    for (const resolution of allResolutions.documents) {
+      const streak = await calculateStreak(userId, resolution.$id);
+      if (streak > longestStreak) {
+        longestStreak = streak;
+      }
+    }
+
+    return {
+      totalResolutions: allResolutions.documents.length,
+      activeResolutions,
+      totalMinutesLogged,
+      totalDaysLogged,
+      longestStreak,
+    };
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    return {
+      totalResolutions: 0,
+      activeResolutions: 0,
+      totalMinutesLogged: 0,
+      totalDaysLogged: 0,
+      longestStreak: 0,
+    };
+  }
+}

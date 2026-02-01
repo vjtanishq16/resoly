@@ -1,8 +1,9 @@
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { ThemeProvider } from "@/app/contexts/ThemeContext";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
-
+ 
 function RouteGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, isLoadingUser } = useAuth();
@@ -42,32 +43,66 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RouteGuard>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="auth" />
-          <Stack.Screen name="index" />
-          <Stack.Screen 
-            name="add-resolution" 
-            options={{
-              presentation: 'modal',
-              headerShown: true,
-              headerTitle: '',
-              headerStyle: { backgroundColor: '#F5F3EE' },
-            }}
-          />
-          <Stack.Screen 
-            name="log-time" 
-            options={{
-              presentation: 'modal',
-              headerShown: true,
-              headerTitle: '',
-              headerStyle: { backgroundColor: '#F5F3EE' },
-            }}
-          />
-          <Stack.Screen name="profile" />
-        </Stack>
-      </RouteGuard>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <RouteGuard>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="auth" />
+            <Stack.Screen name="index" />
+            <Stack.Screen 
+              name="add-resolution" 
+              options={{
+                presentation: 'modal',
+                headerShown: true,
+                headerTitle: '',
+                headerStyle: { backgroundColor: '#F5F3EE' }, // Static color
+              }}
+            />
+            <Stack.Screen 
+              name="log-time" 
+              options={{
+                presentation: 'modal',
+                headerShown: true,
+                headerTitle: '',
+                headerStyle: { backgroundColor: '#F5F3EE' }, // Static color
+              }}
+            />
+            <Stack.Screen name="profile" />
+            <Stack.Screen 
+              name="settings/appearance" 
+              options={{
+                headerShown: true,
+                headerTitle: 'Appearance',
+                presentation: 'card',
+              }}
+            />
+            <Stack.Screen 
+              name="settings/notifications" 
+              options={{
+                headerShown: true,
+                headerTitle: 'Notifications',
+                presentation: 'card',
+              }}
+            />
+            <Stack.Screen 
+              name="settings/help" 
+              options={{
+                headerShown: true,
+                headerTitle: 'Help & Support',
+                presentation: 'card',
+              }}
+            />
+            <Stack.Screen 
+              name="settings/about" 
+              options={{
+                headerShown: true,
+                headerTitle: 'About',
+                presentation: 'card',
+              }}
+            />
+          </Stack>
+        </RouteGuard>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

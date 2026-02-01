@@ -5,6 +5,8 @@ import { useRouter } from "expo-router";
 import { useAuth } from "@/lib/auth-context";
 import { createResolution } from "@/lib/database";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import CategoryBadge from "./components/CategoryBadge";
+import TimeSelector from "./components/TimeSelector";
 
 type Category = "Learning" | "Health" | "Creative" | "Fitness" | "Mindful" | "Tech" | "Music";
 
@@ -163,31 +165,15 @@ export default function AddResolutionScreen() {
 
         {/* Time Goal */}
         <Text style={styles.label}>Daily time goal</Text>
-        <View style={styles.timeGrid}>
-          {TIME_OPTIONS.map((minutes) => (
-            <TouchableOpacity
-              key={minutes}
-              style={[
-                styles.timeButton,
-                plannedMinutes === minutes && styles.timeButtonSelected,
-              ]}
-              onPress={() => {
-                setPlannedMinutes(minutes);
-                setCustomMinutes("");
-              }}
-              disabled={isLoading}
-            >
-              <Text
-                style={[
-                  styles.timeButtonText,
-                  plannedMinutes === minutes && styles.timeButtonTextSelected,
-                ]}
-              >
-                {minutes}m
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <TimeSelector
+          selectedMinutes={plannedMinutes}
+          onSelect={(minutes) => {
+            setPlannedMinutes(minutes);
+            setCustomMinutes("");
+          }}
+          options={TIME_OPTIONS}
+          color={color}
+        />
 
         <RNTextInput
           value={customMinutes}
@@ -201,11 +187,7 @@ export default function AddResolutionScreen() {
         {/* Preview */}
         <Text style={styles.label}>Preview</Text>
         <View style={[styles.previewCard, { borderLeftColor: color }]}>
-          <View style={[styles.categoryBadge, { backgroundColor: `${color}20` }]}>
-            <Text style={[styles.categoryBadgeText, { color }]}>
-              {category.toUpperCase()}
-            </Text>
-          </View>
+          <CategoryBadge category={category} color={color} />
           <Text style={styles.previewTitle}>{title || "Your resolution name"}</Text>
           <Text style={styles.previewTime}>0m / {plannedMinutes}m</Text>
         </View>
@@ -310,31 +292,6 @@ const styles = StyleSheet.create({
   colorButtonSelected: {
     borderColor: "#2A2A2A",
   },
-  timeGrid: {
-    flexDirection: "row",
-    gap: 8,
-    flexWrap: "wrap",
-  },
-  timeButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: "#E5E5E5",
-  },
-  timeButtonSelected: {
-    backgroundColor: "#7A9B76",
-    borderColor: "#7A9B76",
-  },
-  timeButtonText: {
-    fontSize: 14,
-    color: "#6A6A6A",
-    fontWeight: "500",
-  },
-  timeButtonTextSelected: {
-    color: "#FFFFFF",
-  },
   customInput: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
@@ -350,18 +307,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderLeftWidth: 4,
-  },
-  categoryBadge: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginBottom: 8,
-  },
-  categoryBadgeText: {
-    fontSize: 10,
-    fontWeight: "600",
-    letterSpacing: 0.5,
   },
   previewTitle: {
     fontSize: 16,
