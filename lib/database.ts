@@ -114,6 +114,21 @@ export const deleteResolution = async (resolutionId: string): Promise<void> => {
   }
 };
 
+// Get a single resolution by ID
+export const getResolution = async (resolutionId: string): Promise<Resolution> => {
+  try {
+    const response = await databases.getDocument(
+      DATABASE_ID,
+      COLLECTIONS.RESOLUTIONS,
+      resolutionId
+    );
+    return response as unknown as Resolution;
+  } catch (error) {
+    console.error("Error fetching resolution:", error);
+    throw error;
+  }
+};
+
 // ============ DAILY LOGS ============
 
 // Get today's logs for user
@@ -215,6 +230,65 @@ export const logTime = async (
     }
   } catch (error) {
     console.error("Error logging time:", error);
+    throw error;
+  }
+};
+
+// Simplified function for logging resolution time
+export const logResolutionTime = async (
+  resolutionId: string,
+  minutes: number,
+  note?: string
+): Promise<DailyLog> => {
+  const today = new Date().toISOString().split("T")[0];
+  
+  try {
+    // Get the resolution to find userId
+    const resolution = await getResolution(resolutionId);
+    
+    // Check if log already exists for today
+    const existing = await databases.listDocuments(
+      DATABASE_ID,
+      COLLECTIONS.DAILY_LOGS,
+      [
+        Query.equal("resolutionId", resolutionId),
+        Query.equal("date", today),
+      ]
+    );
+    
+    if (existing.documents.length > 0) {
+      // Add to existing log
+      const currentMinutes = existing.documents[0].actualMinutes || 0;
+      const response = await databases.updateDocument(
+        DATABASE_ID,
+        COLLECTIONS.DAILY_LOGS,
+        existing.documents[0].$id,
+        {
+          actualMinutes: currentMinutes + minutes,
+          note: note || existing.documents[0].note || "",
+          loggedAt: new Date().toISOString(),
+        }
+      );
+      return response as unknown as DailyLog;
+    } else {
+      // Create new log
+      const response = await databases.createDocument(
+        DATABASE_ID,
+        COLLECTIONS.DAILY_LOGS,
+        ID.unique(),
+        {
+          userId: resolution.userId,
+          resolutionId,
+          date: today,
+          actualMinutes: minutes,
+          note: note || "",
+          loggedAt: new Date().toISOString(),
+        }
+      );
+      return response as unknown as DailyLog;
+    }
+  } catch (error) {
+    console.error("Error logging resolution time:", error);
     throw error;
   }
 };

@@ -4,10 +4,10 @@ import { useAuth } from "@/lib/auth-context";
 import { useState, useEffect } from "react";
 import { getActiveResolutions, getTodayLogs } from "@/lib/database";
 import type { Resolution, DailyLog } from "@/lib/database";
-
+import ResolutionCard from "./components/ResolutionCard";
+import LogTimeModal from "@/app/log-time";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import ResolutionCard from "./components/ResolutionCard";
 
 export default function Index() {
   const { signOut, user } = useAuth();
@@ -17,6 +17,10 @@ export default function Index() {
   const [todayLogs, setTodayLogs] = useState<DailyLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [logTimeModal, setLogTimeModal] = useState<{
+    visible: boolean;
+    resolution: any;
+  } | null>(null);
 
   const fetchData = async () => {
     if (!user) return;
@@ -173,19 +177,30 @@ export default function Index() {
           ) : (
             resolutions.map((resolution, index) => (
               <ResolutionCard
-    key={resolution.$id}
-    resolution={{
-      title: resolution.title,
-      category: resolution.category,
-      color: resolution.color,
-      actualMinutes: getLoggedMinutes(resolution.$id),
-      plannedMinutes: resolution.plannedMinutesPerDay,
-      streak: getStreak(resolution.$id),
-    }}
-    isFirst={index === 0}  // Changed from isLarge to isFirst
-    onPress={() => console.log("View details:", resolution.title)}
-    onLogTime={() => console.log("Log time:", resolution.title)}
-  />
+                key={resolution.$id}
+                resolution={{
+                  title: resolution.title,
+                  category: resolution.category,
+                  color: resolution.color,
+                  actualMinutes: getLoggedMinutes(resolution.$id),
+                  plannedMinutes: resolution.plannedMinutesPerDay,
+                  streak: getStreak(resolution.$id),
+                }}
+                isFirst={index === 0}
+                onPress={() => console.log("View details:", resolution.title)}
+                onLogTime={() => {
+                  setLogTimeModal({
+                    visible: true,
+                    resolution: {
+                      id: resolution.$id,
+                      title: resolution.title,
+                      color: resolution.color,
+                      plannedMinutes: resolution.plannedMinutesPerDay,
+                      actualMinutes: getLoggedMinutes(resolution.$id),
+                    },
+                  });
+                }}
+              />
             ))
           )}
         </View>
@@ -198,6 +213,19 @@ export default function Index() {
         color="#FFFFFF"
         onPress={() => router.push('/add-resolution')}
       />
+
+      {/* Log Time Modal */}
+      {logTimeModal && user && (
+        <LogTimeModal
+          visible={logTimeModal.visible}
+          onClose={() => setLogTimeModal(null)}
+          resolution={logTimeModal.resolution}
+          userId={user.$id}
+          onSuccess={() => {
+            fetchData();
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -220,7 +248,6 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   
-  // Hero card - NO horizontal padding/margin
   heroCard: {
     backgroundColor: "#7A9B76",
     borderBottomLeftRadius: 32,
@@ -344,7 +371,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   
-  // Content section WITH padding
   contentSection: {
     paddingHorizontal: 20,
   },
@@ -382,7 +408,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   
-  // Floating Action Button
   fab: {
     position: "absolute",
     right: 20,
