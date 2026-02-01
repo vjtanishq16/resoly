@@ -50,23 +50,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsEmailVerified(currentUser.emailVerification);
         } catch (error) {
             console.error('Error refreshing user:', error);
+            throw error;
         }
     };
 
     const signUp = async (email: string, password: string, name: string) => {
         try {
             // Create account with name
-            await account.create('unique()', email, password, name);
+            await account.create(ID.unique(), email, password, name);
             const signInError = await signIn(email, password);
             
+            // VERIFICATION TEMPORARILY DISABLED
             // Send verification email after successful signup
-            if (!signInError) {
-                try {
-                    await sendVerificationEmail();
-                } catch (verifyError) {
-                    console.log('Error sending verification email:', verifyError);
-                }
-            }
+            // if (!signInError) {
+            //     try {
+            //         await sendVerificationEmail();
+            //     } catch (verifyError) {
+            //         console.log('Error sending verification email:', verifyError);
+            //     }
+            // }
             
             return signInError;
         } catch (error) {
@@ -89,15 +91,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await account.createEmailPasswordSession(email, password);
             await getUser();
             
+            // VERIFICATION TEMPORARILY DISABLED
             // Send verification email if not verified
-            const currentUser = await account.get();
-            if (!currentUser.emailVerification) {
-                try {
-                    await sendVerificationEmail();
-                } catch (verifyError) {
-                    console.log('Verification email already sent or error:', verifyError);
-                }
-            }
+            // const currentUser = await account.get();
+            // if (!currentUser.emailVerification) {
+            //     try {
+            //         await sendVerificationEmail();
+            //     } catch (verifyError) {
+            //         console.log('Verification email already sent or error:', verifyError);
+            //     }
+            // }
             
             return null;
         } catch (error) {
@@ -110,8 +113,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const sendVerificationEmail = async () => {
         try {
-            const verificationUrl = `${process.env.EXPO_PUBLIC_APP_URL || 'http://localhost:8081'}/verify-success`;
-            await account.createVerification(verificationUrl);
+            // Just send verification without custom redirect
+            // User will need to manually refresh after clicking the link
+            await account.createVerification('https://cloud.appwrite.io');
         } catch (error) {
             console.error('Error sending verification email:', error);
             throw error;
@@ -120,8 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const resendVerificationEmail = async () => {
         try {
-            const verificationUrl = `${process.env.EXPO_PUBLIC_APP_URL || 'http://localhost:8081'}/verify-success`;
-            await account.createVerification(verificationUrl);
+            await account.createVerification('https://cloud.appwrite.io');
         } catch (error) {
             console.error('Error resending verification email:', error);
             throw error;

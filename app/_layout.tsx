@@ -22,11 +22,14 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
       if (!user && !inAuthGroup) {
         // No user, redirect to auth
         await router.replace('/auth');
-      } else if (user && !isEmailVerified && !inVerifyEmail) {
-        // User exists but email not verified
-        await router.replace('/verify-email');
-      } else if (user && isEmailVerified && (inAuthGroup || inVerifyEmail)) {
-        // User verified, redirect to home
+      } 
+      // VERIFICATION TEMPORARILY DISABLED
+      // else if (user && !isEmailVerified && !inVerifyEmail) {
+      //   // User exists but email not verified
+      //   await router.replace('/verify-email');
+      // } 
+      else if (user && inAuthGroup) {
+        // User logged in, redirect to home (skip verification check)
         await router.replace('/');
       }
       

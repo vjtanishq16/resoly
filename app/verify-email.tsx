@@ -64,10 +64,17 @@ export default function VerifyEmailScreen() {
           {user?.email}
         </Text>
 
-        <Text style={[styles.instruction, { color: colors.textSecondary }]}>
-          Please check your email and click the verification link to continue. 
-          After clicking the link, come back here and tap the button below.
-        </Text>
+        <View style={[styles.stepBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.stepTitle, { color: colors.text }]}>
+            📧 Steps to verify:
+          </Text>
+          <Text style={[styles.stepText, { color: colors.textSecondary }]}>
+            1. Check your email inbox{'\n'}
+            2. Click the verification link{'\n'}
+            3. You'll see a success message in your browser{'\n'}
+            4. Come back here and tap "I've Verified My Email"
+          </Text>
+        </View>
 
         {error && (
           <Text style={styles.error}>{error}</Text>
@@ -167,12 +174,21 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
-  instruction: {
-    fontSize: 14,
-    lineHeight: 20,
+  stepBox: {
+    width: '100%',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
     marginBottom: 20,
-    textAlign: 'center',
-    paddingHorizontal: 20,
+  },
+  stepTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  stepText: {
+    fontSize: 14,
+    lineHeight: 22,
   },
   error: {
     color: '#D32F2F',
