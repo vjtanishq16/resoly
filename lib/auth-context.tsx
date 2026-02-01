@@ -7,11 +7,16 @@ import * as Linking from "expo-linking";
 type AuthContextType = {
     user: Models.User<Models.Preferences> | null;
     isLoadingUser: boolean;
-    signUp: (email: string, password: string) => Promise<string | null>;
+    isEmailVerified: boolean;
+    signUp: (email: string, password: string, name: string) => Promise<string | null>;
     signIn: (email: string, password: string) => Promise<string | null>;
     signInWithGoogle: () => Promise<void>;
     signInWithGitHub: () => Promise<void>;
     signOut: () => Promise<void>;
+    sendVerificationEmail: () => Promise<void>;
+    resendVerificationEmail: () => Promise<void>;
+    refreshUser: () => Promise<void>;
+    updateUserName: (name: string) => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,6 +24,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
     const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
+    const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
     
     useEffect(() => {
         getUser();
@@ -28,17 +34,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             const currentUser = await account.get();
             setUser(currentUser);
+            setIsEmailVerified(currentUser.emailVerification);
         } catch (error) {
             setUser(null);
+            setIsEmailVerified(false);
         } finally {
             setIsLoadingUser(false);
         }
     }
 
-    const signUp = async (email: string, password: string) => {
+    const refreshUser = async () => {
         try {
-            await account.create(ID.unique(), email, password);
+            const currentUser = await account.get();
+            setUser(currentUser);
+            setIsEmailVerified(currentUser.emailVerification);
+        } catch (error) {
+            console.error('Error refreshing user:', error);
+        }
+    };
+
+    const signUp = async (email: string, password: string, name: string) => {
+        try {
+            // Create account with name
+            await account.create('unique()', email, password, name);
             const signInError = await signIn(email, password);
+            
+            // Send verification email after successful signup
+            if (!signInError) {
+                try {
+                    await sendVerificationEmail();
+                } catch (verifyError) {
+                    console.log('Error sending verification email:', verifyError);
+                }
+            }
+            
             return signInError;
         } catch (error) {
             if (error instanceof Error) {
@@ -59,12 +88,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             await account.createEmailPasswordSession(email, password);
             await getUser();
+            
+            // Send verification email if not verified
+            const currentUser = await account.get();
+            if (!currentUser.emailVerification) {
+                try {
+                    await sendVerificationEmail();
+                } catch (verifyError) {
+                    console.log('Verification email already sent or error:', verifyError);
+                }
+            }
+            
             return null;
         } catch (error) {
             if (error instanceof Error) {
                 return error.message;
             }
             return "An error occurred during sign-in";
+        }
+    };
+
+    const sendVerificationEmail = async () => {
+        try {
+            const verificationUrl = `${process.env.EXPO_PUBLIC_APP_URL || 'http://localhost:8081'}/verify-success`;
+            await account.createVerification(verificationUrl);
+        } catch (error) {
+            console.error('Error sending verification email:', error);
+            throw error;
+        }
+    };
+
+    const resendVerificationEmail = async () => {
+        try {
+            const verificationUrl = `${process.env.EXPO_PUBLIC_APP_URL || 'http://localhost:8081'}/verify-success`;
+            await account.createVerification(verificationUrl);
+        } catch (error) {
+            console.error('Error resending verification email:', error);
+            throw error;
+        }
+    };
+
+    const updateUserName = async (name: string) => {
+        try {
+            await account.updateName(name);
+            
+            // Refresh user data
+            const updatedUser = await account.get();
+            setUser(updatedUser);
+        } catch (error) {
+            console.error('Error updating user name:', error);
+            throw error;
         }
     };
 
@@ -80,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // User will manually come back to the app after signing in
             // The session will be available when they return
+            await getUser();
         } catch (error) {
             console.error("Google sign-in error:", error);
         }
@@ -110,6 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             await account.deleteSession("current");
             setUser(null);
+            setIsEmailVerified(false);
         } catch (error) {
             console.error("Sign-out failed", error);
         }
@@ -118,12 +193,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return (
         <AuthContext.Provider value={{ 
             user, 
-            isLoadingUser, 
+            isLoadingUser,
+            isEmailVerified,
             signUp, 
             signIn, 
             signInWithGoogle,
             signInWithGitHub,
-            signOut 
+            signOut,
+            sendVerificationEmail,
+            resendVerificationEmail,
+            refreshUser,
+            updateUserName,
         }}>
             {children}
         </AuthContext.Provider>

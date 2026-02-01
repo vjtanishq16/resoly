@@ -156,21 +156,30 @@ export default function ProfileScreen() {
         </View>
 
         {/* User Info Card */}
-        <View style={[styles.userCard, { backgroundColor: colors.card }]}>
-          <View style={styles.avatarContainer}>
-            <MaterialCommunityIcons
-              name="account-circle"
-              size={80}
-              color={colors.primary}
-            />
-          </View>
-          <Text style={[styles.userName, { color: colors.text }]}>
-            {user?.name || "User"}
-          </Text>
-          <Text style={[styles.userEmail, { color: colors.textSecondary }]}>
-            {user?.email}
-          </Text>
-        </View>
+<View style={[styles.userCard, { backgroundColor: colors.card }]}>
+  <View style={styles.avatarContainer}>
+    <MaterialCommunityIcons
+      name="account-circle"
+      size={80}
+      color={colors.primary}
+    />
+  </View>
+  <Text style={[styles.userName, { color: colors.text }]}>
+    {user?.name || "User"}
+  </Text>
+  <Text style={[styles.userEmail, { color: colors.textSecondary }]}>
+    {user?.email}
+  </Text>
+  
+  {/* Optional: Add edit name button */}
+  <TouchableOpacity
+    style={[styles.editButton, { borderColor: colors.border }]}
+    onPress={() => router.push('/settings/edit-profile')}
+  >
+    <MaterialCommunityIcons name="pencil" size={16} color={colors.textSecondary} />
+    <Text style={[styles.editText, { color: colors.textSecondary }]}>Edit Name</Text>
+  </TouchableOpacity>
+</View>
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
@@ -418,6 +427,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
   },
+  editButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 6,
+  marginTop: 12,
+  paddingHorizontal: 16,
+  paddingVertical: 8,
+  borderRadius: 20,
+  borderWidth: 1,
+},
+editText: {
+  fontSize: 14,
+},
   settingLeft: {
     flexDirection: "row",
     alignItems: "center",

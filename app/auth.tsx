@@ -2,6 +2,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { TextInput, Text, Button, useTheme, ActivityIndicator } from "react-native-paper";
+import { useTheme as useAppTheme } from "@/app/contexts/ThemeContext";
 
 export default function AuthScreen() {
     const [isSignUp, setIsSignUp] = useState<boolean>(false);
@@ -10,42 +11,42 @@ export default function AuthScreen() {
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [name, setName] = useState("");
 
     const theme = useTheme();
+    const { colors } = useAppTheme();
     const { signUp, signIn } = useAuth();
     
     const handleSwitchMode = () => {
         setIsSignUp((prev) => !prev);
         setError(null);
     }
-    
     const handleAuth = async () => {
-        if (!email || !password) {
-            setError("Please fill in all fields");
-            return;
-        }
-        if (password.length < 6) {
-            setError("Password must be at least 6 characters");
-            return;
-        }
+  setError("");
+  setIsLoading(true);
 
-        setError(null);
-        setIsLoading(true);
-
-        if (isSignUp) {
-            const error = await signUp(email, password);
-            if (error) {
-                setError(error);
-            }
-        } else {
-            const error = await signIn(email, password);
-            if (error) {
-                setError(error);
-            }
-        }
-        
+  try {
+    let errorMessage;
+    if (isSignUp) {
+      if (!name.trim()) {
+        setError("Please enter your name");
         setIsLoading(false);
-    };
+        return;
+      }
+      errorMessage = await signUp(email, password, name);
+    } else {
+      errorMessage = await signIn(email, password);
+    }
+    
+    if (errorMessage) {
+      setError(errorMessage);
+    }
+  } catch (err: any) {
+    setError(err.message || "An error occurred");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
     return (
         <KeyboardAvoidingView 
@@ -55,7 +56,7 @@ export default function AuthScreen() {
         >
             {isLoading && (
                 <View style={styles.loadingOverlay}>
-                    <ActivityIndicator size="large" color="#7A9B76" />
+                    <ActivityIndicator size="large" color={colors.primary} />
                     <Text style={styles.loadingText}>
                         {isSignUp ? "Creating your account..." : "Signing you in..."}
                     </Text>
@@ -95,6 +96,28 @@ export default function AuthScreen() {
                 </View>
                 
                 <View style={styles.contentContainer}>
+                    {/* Name Input - Only for Sign Up */}
+                    {isSignUp && (
+                        <>
+                            <Text style={styles.inputLabel}>Full name</Text>
+                            <TextInput
+                                style={styles.input}
+                                autoCapitalize="words"
+                                placeholder="John Doe"
+                                placeholderTextColor="#ACACAC"
+                                mode="outlined"
+                                outlineColor="#E5E5E5"
+                                activeOutlineColor={colors.primary}
+                                outlineStyle={{ borderRadius: 16, borderWidth: 2 }}
+                                left={<TextInput.Icon icon="account-outline" color="#ACACAC" />}
+                                theme={{ colors: { background: 'white' }}}
+                                value={name}
+                                onChangeText={setName}
+                                disabled={isLoading}
+                            />
+                        </>
+                    )}
+
                     {/* Email Input */}
                     <Text style={styles.inputLabel}>Email address</Text>
                     <TextInput
@@ -105,7 +128,7 @@ export default function AuthScreen() {
                         placeholderTextColor="#ACACAC"
                         mode="outlined"
                         outlineColor="#E5E5E5"
-                        activeOutlineColor="#7A9B76"
+                        activeOutlineColor={colors.primary}
                         outlineStyle={{ borderRadius: 16, borderWidth: 2 }}
                         left={<TextInput.Icon icon="email-outline" color="#ACACAC" />}
                         theme={{ colors: { background: 'white' }}}
@@ -123,7 +146,7 @@ export default function AuthScreen() {
                         secureTextEntry={!showPassword}
                         mode="outlined"
                         outlineColor="#E5E5E5"
-                        activeOutlineColor="#7A9B76"
+                        activeOutlineColor={colors.primary}
                         outlineStyle={{ borderRadius: 16, borderWidth: 2 }}
                         left={<TextInput.Icon icon="lock-outline" color="#ACACAC" />}
                         right={
@@ -146,7 +169,7 @@ export default function AuthScreen() {
                         onPress={handleAuth}
                         mode="contained" 
                         style={styles.primaryButton}
-                        buttonColor="#7A9B76"
+                        buttonColor={colors.primary}
                         labelStyle={styles.primaryButtonLabel}
                         contentStyle={styles.buttonContent}
                         loading={isLoading}

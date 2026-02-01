@@ -6,7 +6,7 @@ import { View, ActivityIndicator } from "react-native";
  
 function RouteGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { user, isLoadingUser } = useAuth();
+  const { user, isLoadingUser, isEmailVerified } = useAuth();
   const segments = useSegments();
   const [isNavigating, setIsNavigating] = useState(false);
   
@@ -14,13 +14,19 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
     if (isLoadingUser || isNavigating) return;
     
     const inAuthGroup = segments[0] === "auth";
+    const inVerifyEmail = segments[0] === "verify-email";
     
     const navigate = async () => {
       setIsNavigating(true);
       
       if (!user && !inAuthGroup) {
+        // No user, redirect to auth
         await router.replace('/auth');
-      } else if (user && inAuthGroup) {
+      } else if (user && !isEmailVerified && !inVerifyEmail) {
+        // User exists but email not verified
+        await router.replace('/verify-email');
+      } else if (user && isEmailVerified && (inAuthGroup || inVerifyEmail)) {
+        // User verified, redirect to home
         await router.replace('/');
       }
       
@@ -28,7 +34,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
     };
     
     navigate();
-  }, [user, isLoadingUser, segments]);
+  }, [user, isLoadingUser, isEmailVerified, segments]);
   
   if (isLoadingUser) {
     return (
@@ -48,6 +54,7 @@ export default function RootLayout() {
         <RouteGuard>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="auth" />
+            <Stack.Screen name="verify-email" />
             <Stack.Screen name="index" />
             <Stack.Screen 
               name="add-resolution" 
@@ -55,7 +62,7 @@ export default function RootLayout() {
                 presentation: 'modal',
                 headerShown: true,
                 headerTitle: '',
-                headerStyle: { backgroundColor: '#F5F3EE' }, // Static color
+                headerStyle: { backgroundColor: '#F5F3EE' },
               }}
             />
             <Stack.Screen 
@@ -64,7 +71,7 @@ export default function RootLayout() {
                 presentation: 'modal',
                 headerShown: true,
                 headerTitle: '',
-                headerStyle: { backgroundColor: '#F5F3EE' }, // Static color
+                headerStyle: { backgroundColor: '#F5F3EE' },
               }}
             />
             <Stack.Screen name="profile" />
@@ -97,6 +104,14 @@ export default function RootLayout() {
               options={{
                 headerShown: true,
                 headerTitle: 'About',
+                presentation: 'card',
+              }}
+            />
+            <Stack.Screen 
+              name="settings/edit-profile" 
+              options={{
+                headerShown: true,
+                headerTitle: 'Edit Profile',
                 presentation: 'card',
               }}
             />
