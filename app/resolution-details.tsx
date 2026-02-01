@@ -25,11 +25,13 @@ import type { Resolution, DailyLog } from "@/lib/database";
 import { LineChart } from "react-native-chart-kit";
 import StatCard from "./components/StatCard";
 import CategoryBadge from "./components/CategoryBadge";
+import { useTheme } from "@/app/contexts/ThemeContext";
 
 const { width } = Dimensions.get("window");
 
 export default function ResolutionDetailsScreen() {
   const { user } = useAuth();
+  const { colors } = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams();
   const resolutionId = params.id as string;
@@ -156,7 +158,7 @@ export default function ResolutionDetailsScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7A9B76" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading details...</Text>
       </View>
     );
@@ -175,7 +177,7 @@ export default function ResolutionDetailsScreen() {
     <View style={styles.container}>
       {isDeleting && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#7A9B76" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Deleting...</Text>
         </View>
       )}
