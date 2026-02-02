@@ -14,7 +14,6 @@ import { useTheme } from "@/app/contexts/ThemeContext";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getUserStats } from "@/lib/database";
-import StatCard from "./components/StatCard";
 import AchievementCard from "./components/AchievementCard";
 
 export default function ProfileScreen() {
@@ -58,55 +57,60 @@ export default function ProfileScreen() {
     setIsSigningOut(false);
   };
 
-  // Enhanced achievements with real data
+  const totalHours = Math.round(stats.totalMinutesLogged / 60);
+  const avgHoursPerDay = stats.totalDaysLogged > 0 
+    ? (stats.totalMinutesLogged / 60 / stats.totalDaysLogged).toFixed(1)
+    : "0.0";
+
+  // Enhanced achievements with real data and progress
   const achievements = [
     {
       id: 1,
       title: "First Step",
       description: "Created your first resolution",
-      icon: "star-outline",
+      icon: "star",
+      emoji: "⭐",
       unlocked: stats.totalResolutions > 0,
-      color: "#FFD700",
+      color: "#FFE5B4",
+      progress: stats.totalResolutions > 0 ? 100 : 0,
+      current: stats.totalResolutions,
+      target: 1,
     },
     {
       id: 2,
-      title: "Getting Started",
-      description: "Log time for 3 days",
-      icon: "calendar-check",
-      unlocked: stats.totalDaysLogged >= 3,
-      color: colors.primary,
+      title: "Week Warrior",
+      description: "Completed all goals for 7 days",
+      icon: "fire",
+      emoji: "🔥",
+      unlocked: stats.longestStreak >= 7,
+      color: "#FFE5D9",
+      progress: Math.min((stats.longestStreak / 7) * 100, 100),
+      current: stats.longestStreak,
+      target: 7,
     },
     {
       id: 3,
-      title: "Committed",
-      description: "Build a 7-day streak",
-      icon: "fire",
-      unlocked: stats.longestStreak >= 7,
-      color: "#FF6B35",
+      title: "Early Bird",
+      description: "Logged 100 hours total",
+      icon: "alarm",
+      emoji: "⏰",
+      unlocked: stats.totalMinutesLogged >= 6000,
+      color: "#E8F5E9",
+      progress: Math.min((stats.totalMinutesLogged / 6000) * 100, 100),
+      current: Math.round(stats.totalMinutesLogged / 60),
+      target: 100,
     },
     {
       id: 4,
-      title: "Dedicated",
-      description: "Build a 30-day streak",
-      icon: "trophy",
-      unlocked: stats.longestStreak >= 30,
-      color: "#C89968",
-    },
-    {
-      id: 5,
       title: "Century Club",
-      description: "Log 100 total hours",
-      icon: "clock-check",
-      unlocked: stats.totalMinutesLogged >= 6000,
-      color: "#6B8E9E",
-    },
-    {
-      id: 6,
-      title: "Overachiever",
-      description: "Maintain 5 active resolutions",
-      icon: "flash",
-      unlocked: stats.activeResolutions >= 5,
-      color: "#B8A8C8",
+      description: "Reach a 100-day streak",
+      icon: "trophy",
+      emoji: "🏆",
+      unlocked: stats.longestStreak >= 100,
+      color: "#F3E5F5",
+      progress: Math.min((stats.longestStreak / 100) * 100, 100),
+      current: stats.longestStreak,
+      target: 100,
     },
   ];
 
@@ -115,10 +119,8 @@ export default function ProfileScreen() {
   if (isLoading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-          Loading your profile...
-        </Text>
+        <ActivityIndicator size="large" color="#7A9B76" />
+        <Text style={styles.loadingText}>Loading your profile...</Text>
       </View>
     );
   }
@@ -127,10 +129,8 @@ export default function ProfileScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {isSigningOut && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-            Signing you out...
-          </Text>
+          <ActivityIndicator size="large" color="#7A9B76" />
+          <Text style={styles.loadingText}>Signing you out...</Text>
         </View>
       )}
 
@@ -139,198 +139,192 @@ export default function ProfileScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
+        {/* Hero Header with Gradient */}
+        <View style={styles.heroHeader}>
+          <View style={styles.heroBlob1} />
+          <View style={styles.heroBlob2} />
+          
+          <View style={styles.heroContent}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <View style={styles.avatarCircle}>
+              <Text style={{ fontSize: 36 }}>{user?.name ? user.name.charAt(0).toUpperCase() : ""}</Text>
+            </View>
+
+            <Text style={styles.heroTitle}>Your Journey</Text>
+            <Text style={styles.heroSubtitle}>
+              Building better habits, one day at a time
+            </Text>
+
+            {/* Stats Grid in Hero */}
+            <View style={styles.heroStatsGrid}>
+              <View style={styles.heroStatCard}>
+                <MaterialCommunityIcons name="trophy-outline" size={20} color="rgba(255,255,255,0.9)" />
+                <Text style={styles.heroStatValue}>{totalHours}</Text>
+                <Text style={styles.heroStatLabel}>Total Hours</Text>
+              </View>
+
+              <View style={styles.heroStatCard}>
+                <MaterialCommunityIcons name="calendar-check" size={20} color="rgba(255,255,255,0.9)" />
+                <Text style={styles.heroStatValue}>{stats.totalDaysLogged}</Text>
+                <Text style={styles.heroStatLabel}>Days Active</Text>
+              </View>
+            </View>
+
+            <View style={[styles.heroStatCardWide]}>
+              <View style={styles.heroStatHalf}>
+                <MaterialCommunityIcons name="chart-line-variant" size={20} color="rgba(255,255,255,0.9)" />
+                <Text style={styles.heroStatValue}>{stats.longestStreak}</Text>
+                <Text style={styles.heroStatLabel}>Longest Streak</Text>
+              </View>
+              <View style={styles.heroStatDivider} />
+              <View style={styles.heroStatHalf}>
+                <MaterialCommunityIcons name="clock-outline" size={20} color="rgba(255,255,255,0.9)" />
+                <Text style={styles.heroStatValue}>{avgHoursPerDay}</Text>
+                <Text style={styles.heroStatLabel}>Avg. Hours/Day</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* White Content Section */}
+        <View style={styles.contentSection}>
+          {/* Achievements Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Recent Achievements</Text>
+
+            <View style={styles.achievementsGrid}>
+              {achievements.map((achievement) => (
+                <View
+                  key={achievement.id}
+                  style={[
+                    styles.achievementCard,
+                    { backgroundColor: achievement.unlocked ? achievement.color : "#F5F5F5" }
+                  ]}
+                >
+                  <Text style={styles.achievementEmoji}>{achievement.emoji}</Text>
+                  <Text style={[
+                    styles.achievementTitle,
+                    { color: achievement.unlocked ? "#2A2A2A" : "#AFAFAF" }
+                  ]}>
+                    {achievement.title}
+                  </Text>
+                  <Text style={[
+                    styles.achievementDescription,
+                    { color: achievement.unlocked ? "#6A6A6A" : "#CFCFCF" }
+                  ]}>
+                    {achievement.description}
+                  </Text>
+                  {!achievement.unlocked && (
+                    <>
+                      <View style={styles.achievementProgress}>
+                        <View style={[
+                          styles.achievementProgressBar,
+                          { width: `${achievement.progress}%` }
+                        ]} />
+                      </View>
+                      <Text style={styles.achievementProgressText}>
+                        {achievement.id === 3 
+                          ? `${achievement.current}/${achievement.target} hours`
+                          : `${achievement.current}/${achievement.target} days`
+                        }
+                      </Text>
+                    </>
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Settings Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Settings</Text>
+
+            <View style={styles.settingsList}>
+              <TouchableOpacity 
+                style={styles.settingItem}
+                onPress={() => router.push('/settings/notifications')}
+              >
+                <View style={styles.settingLeft}>
+                  <View style={[styles.settingIconCircle, { backgroundColor: "#E8F5E9" }]}>
+                    <MaterialCommunityIcons name="bell-outline" size={20} color="#7A9B76" />
+                  </View>
+                  <View>
+                    <Text style={styles.settingText}>Notifications</Text>
+                    <Text style={styles.settingSubtext}>Manage reminders</Text>
+                  </View>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={24} color="#CFCFCF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.settingItem}
+                onPress={() => router.push('/settings/appearance')}
+              >
+                <View style={styles.settingLeft}>
+                  <View style={[styles.settingIconCircle, { backgroundColor: "#F3E5F5" }]}>
+                    <MaterialCommunityIcons name="palette-outline" size={20} color="#9B7E8B" />
+                  </View>
+                  <View>
+                    <Text style={styles.settingText}>Appearance</Text>
+                    <Text style={styles.settingSubtext}>Customize your experience</Text>
+                  </View>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={24} color="#CFCFCF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.settingItem}
+                onPress={() => router.push('/settings/edit-profile')}
+              >
+                <View style={styles.settingLeft}>
+                  <View style={[styles.settingIconCircle, { backgroundColor: "#FFF4E6" }]}>
+                    <MaterialCommunityIcons name="account-edit-outline" size={20} color="#C89968" />
+                  </View>
+                  <View>
+                    <Text style={styles.settingText}>Edit Profile</Text>
+                    <Text style={styles.settingSubtext}>Update your name and info</Text>
+                  </View>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={24} color="#CFCFCF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.settingItem}
+                onPress={() => router.push('/settings/about')}
+              >
+                <View style={styles.settingLeft}>
+                  <View style={[styles.settingIconCircle, { backgroundColor: "#E3F2FD" }]}>
+                    <MaterialCommunityIcons name="help-circle-outline" size={20} color="#6B8E9E" />
+                  </View>
+                  <View>
+                    <Text style={styles.settingText}>About</Text>
+                    <Text style={styles.settingSubtext}>Know more about resoly</Text>
+                  </View>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={24} color="#CFCFCF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Sign Out Button */}
           <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
+            style={styles.signOutButton}
+            onPress={handleSignOut}
+            disabled={isSigningOut}
           >
-            <MaterialCommunityIcons
-              name="arrow-left"
-              size={24}
-              color={colors.text}
-            />
+            <MaterialCommunityIcons name="logout" size={20} color="#D32F2F" />
+            <Text style={styles.signOutText}>Sign Out</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Profile</Text>
-          <View style={styles.backButton} />
+
+          <Text style={styles.version}>resoly v1.0.0</Text>
+          <Text style={styles.tagline}>Made with care for better habits</Text>
         </View>
-
-        {/* User Info Card */}
-<View style={[styles.userCard, { backgroundColor: colors.card }]}>
-  <View style={styles.avatarContainer}>
-    <MaterialCommunityIcons
-      name="account-circle"
-      size={80}
-      color={colors.primary}
-    />
-  </View>
-  <Text style={[styles.userName, { color: colors.text }]}>
-    {user?.name || "User"}
-  </Text>
-  <Text style={[styles.userEmail, { color: colors.textSecondary }]}>
-    {user?.email}
-  </Text>
-  
-  {/* Optional: Add edit name button */}
-  <TouchableOpacity
-    style={[styles.editButton, { borderColor: colors.border }]}
-    onPress={() => router.push('/settings/edit-profile')}
-  >
-    <MaterialCommunityIcons name="pencil" size={16} color={colors.textSecondary} />
-    <Text style={[styles.editText, { color: colors.textSecondary }]}>Edit Name</Text>
-  </TouchableOpacity>
-</View>
-
-        {/* Stats Grid */}
-        <View style={styles.statsGrid}>
-          <StatCard 
-            value={stats.activeResolutions} 
-            label={"Active\nResolutions"} 
-          />
-          <StatCard 
-            value={stats.longestStreak} 
-            label={"Longest\nStreak"} 
-          />
-          <StatCard 
-            value={Math.round(stats.totalMinutesLogged / 60)} 
-            label={"Total\nHours"} 
-          />
-          <StatCard 
-            value={stats.totalDaysLogged} 
-            label={"Days\nLogged"} 
-          />
-        </View>
-
-        {/* Achievements Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Achievements
-            </Text>
-            <Text style={[styles.achievementCount, { color: colors.primary }]}>
-              {unlockedCount}/{achievements.length}
-            </Text>
-          </View>
-
-          <View style={styles.achievementsGrid}>
-            {achievements.map((achievement) => (
-              <AchievementCard
-                key={achievement.id}
-                title={achievement.title}
-                description={achievement.description}
-                icon={achievement.icon}
-                color={achievement.color}
-                unlocked={achievement.unlocked}
-              />
-            ))}
-          </View>
-        </View>
-
-        {/* Settings Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Settings</Text>
-
-          <TouchableOpacity 
-            style={[styles.settingItem, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => router.push('/settings/notifications')}
-          >
-            <View style={styles.settingLeft}>
-              <MaterialCommunityIcons
-                name="bell-outline"
-                size={24}
-                color={colors.textSecondary}
-              />
-              <Text style={[styles.settingText, { color: colors.text }]}>
-                Notifications
-              </Text>
-            </View>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={24}
-              color={colors.textSecondary}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.settingItem, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => router.push('/settings/appearance')}
-          >
-            <View style={styles.settingLeft}>
-              <MaterialCommunityIcons
-                name="palette-outline"
-                size={24}
-                color={colors.textSecondary}
-              />
-              <Text style={[styles.settingText, { color: colors.text }]}>
-                Appearance
-              </Text>
-            </View>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={24}
-              color={colors.textSecondary}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.settingItem, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => router.push('/settings/help')}
-          >
-            <View style={styles.settingLeft}>
-              <MaterialCommunityIcons
-                name="help-circle-outline"
-                size={24}
-                color={colors.textSecondary}
-              />
-              <Text style={[styles.settingText, { color: colors.text }]}>
-                Help & Support
-              </Text>
-            </View>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={24}
-              color={colors.textSecondary}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.settingItem, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => router.push('/settings/about')}
-          >
-            <View style={styles.settingLeft}>
-              <MaterialCommunityIcons
-                name="information-outline"
-                size={24}
-                color={colors.textSecondary}
-              />
-              <Text style={[styles.settingText, { color: colors.text }]}>
-                About
-              </Text>
-            </View>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={24}
-              color={colors.textSecondary}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Sign Out Button */}
-        <Button
-          mode="outlined"
-          icon="logout"
-          textColor="#D32F2F"
-          style={styles.signOutButton}
-          labelStyle={styles.signOutButtonLabel}
-          onPress={handleSignOut}
-          disabled={isSigningOut}
-        >
-          Sign Out
-        </Button>
-
-        <Text style={[styles.version, { color: colors.textSecondary }]}>
-          Version 1.0.0
-        </Text>
       </ScrollView>
     </View>
   );
@@ -349,118 +343,238 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 50,
-    paddingHorizontal: 20,
     paddingBottom: 40,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
+  
+  // Hero Header
+  heroHeader: {
+    backgroundColor: "#7A9B76",
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 20 : 60,
+    paddingBottom: 32,
+    paddingHorizontal: 20,
+    position: "relative",
+    overflow: "hidden",
+  },
+  heroBlob1: {
+    position: "absolute",
+    top: -100,
+    right: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  heroBlob2: {
+    position: "absolute",
+    bottom: -60,
+    left: -40,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+  },
+  heroContent: {
+    position: "relative",
+    zIndex: 1,
   },
   backButton: {
     width: 40,
     height: 40,
     justifyContent: "center",
+    marginBottom: 20,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-  },
-  userCard: {
-    borderRadius: 20,
-    padding: 24,
+  avatarCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    alignSelf: "flex-start",
+    marginBottom: 16,
   },
-  avatarContainer: {
+  heroTitle: {
+    fontSize: 32,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  heroSubtitle: {
+    fontSize: 15,
+    color: "rgba(255, 255, 255, 0.85)",
+    marginBottom: 24,
+  },
+  heroStatsGrid: {
+    flexDirection: "row",
+    gap: 12,
     marginBottom: 12,
   },
-  userName: {
-    fontSize: 22,
+  heroStatCard: {
+    flex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    alignItems: "flex-start",
+  },
+  heroStatCardWide: {
+    flexDirection: "row",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  heroStatHalf: {
+    flex: 1,
+    alignItems: "flex-start",
+  },
+  heroStatDivider: {
+    width: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    marginHorizontal: 16,
+  },
+  heroStatValue: {
+    fontSize: 28,
     fontWeight: "600",
+    color: "#FFFFFF",
+    marginTop: 8,
     marginBottom: 4,
   },
-  userEmail: {
-    fontSize: 14,
+  heroStatLabel: {
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.8)",
   },
-  statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    marginBottom: 32,
+  
+  // Content Section
+  contentSection: {
+    backgroundColor: "#F5F3EE",
+    paddingHorizontal: 20,
+    paddingTop: 24,
   },
   section: {
     marginBottom: 32,
   },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "600",
+    color: "#2A2A2A",
+    marginBottom: 16,
+    letterSpacing: -0.3,
   },
-  achievementCount: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
+  
+  // Achievements
   achievementsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
     gap: 12,
+  },
+  achievementCard: {
+    borderRadius: 16,
+    padding: 20,
+    position: "relative",
+  },
+  achievementEmoji: {
+    fontSize: 32,
+    marginBottom: 12,
+  },
+  achievementTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  achievementDescription: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  achievementProgress: {
+    height: 4,
+    backgroundColor: "rgba(175, 175, 175, 0.3)",
+    borderRadius: 2,
+    marginTop: 12,
+    overflow: "hidden",
+  },
+  achievementProgressBar: {
+    height: "100%",
+    backgroundColor: "#AFAFAF",
+    borderRadius: 2,
+  },
+  achievementProgressText: {
+    fontSize: 11,
+    color: "#AFAFAF",
+    marginTop: 4,
+    fontWeight: "500",
+  },
+  
+  // Settings
+  settingsList: {
+    gap: 8,
   },
   settingItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 16,
-    marginBottom: 8,
-    borderWidth: 1,
   },
-  editButton: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 6,
-  marginTop: 12,
-  paddingHorizontal: 16,
-  paddingVertical: 8,
-  borderRadius: 20,
-  borderWidth: 1,
-},
-editText: {
-  fontSize: 14,
-},
   settingLeft: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
+  settingIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   settingText: {
     fontSize: 16,
+    fontWeight: "500",
+    color: "#2A2A2A",
   },
+  settingSubtext: {
+    fontSize: 12,
+    color: "#8A8A8A",
+    marginTop: 2,
+  },
+  
+  // Sign Out
   signOutButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
-    borderColor: "#D32F2F",
-    marginBottom: 16,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#FFE5E5",
   },
-  signOutButtonLabel: {
+  signOutText: {
     fontSize: 16,
     fontWeight: "500",
+    color: "#D32F2F",
   },
+  
+  // Footer
   version: {
     fontSize: 12,
     textAlign: "center",
+    color: "#AFAFAF",
+    marginBottom: 4,
   },
+  tagline: {
+    fontSize: 13,
+    textAlign: "center",
+    color: "#CFCFCF",
+  },
+  
   loadingOverlay: {
     position: "absolute",
     top: 0,
@@ -476,5 +590,6 @@ editText: {
     marginTop: 16,
     fontSize: 16,
     fontWeight: "500",
+    color: "#6A6A6A",
   },
 });

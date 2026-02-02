@@ -303,7 +303,8 @@ export async function logTime(
 
 /**
  * Calculate streak for a resolution
- * A streak is consecutive days where actualMinutes >= plannedMinutes
+ * A streak is consecutive days where ANY activity was logged (actualMinutes > 0)
+ * This encourages consistency over perfection - showing up is what matters!
  */
 export async function calculateStreak(
   userId: string,
@@ -344,7 +345,8 @@ export async function calculateStreak(
       // Find log for this date
       const log = logs.documents.find((l) => l.date === dateStr);
 
-      if (log && log.actualMinutes >= resolution.plannedMinutesPerDay) {
+      // Streak continues if ANY activity was logged (even 1 minute counts!)
+      if (log && log.actualMinutes > 0) {
         streak++;
         checkDate.setDate(checkDate.getDate() - 1);
       } else if (dateStr === today.toISOString().split('T')[0]) {

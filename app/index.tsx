@@ -105,7 +105,7 @@ export default function Index() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color="#7A9B76" />
         <Text style={styles.loadingText}>Loading your resolutions...</Text>
       </View>
     );
@@ -115,7 +115,7 @@ export default function Index() {
     <View style={styles.container}>
       {isSigningOut && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color="#7A9B76" />
           <Text style={styles.loadingText}>Signing you out...</Text>
         </View>
       )}
@@ -128,16 +128,15 @@ export default function Index() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
+            tintColor="#7A9B76"
+            colors={["#7A9B76"]}
           />
         }
       >
-        {/* Hero Card - Full Width */}
-        <View style={[styles.heroCard, { backgroundColor: colors.primary }]}>
-          <View style={styles.decorativeCircle1} />
-          <View style={styles.decorativeCircle2} />
-          <View style={styles.decorativeCircle3} />
+        {/* Hero Card */}
+        <View style={styles.heroCard}>
+          <View style={styles.decorativeBlob1} />
+          <View style={styles.decorativeBlob2} />
           
           <View style={styles.heroContent}>
             {/* Header */}
@@ -150,7 +149,7 @@ export default function Index() {
                 onPress={() => router.push('/profile')}
                 style={styles.profileButton}
               >
-                <MaterialCommunityIcons name="account-circle-outline" size={32} color="#FFFFFF" />
+                <MaterialCommunityIcons name="account-circle-outline" size={28} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
 
@@ -169,7 +168,7 @@ export default function Index() {
                   <View 
                     style={[
                       styles.progressBarFilled,
-                      { width: `${totalProgress}%` }
+                      { width: `${Math.min(totalProgress, 100)}%` }
                     ]} 
                   />
                 </View>
@@ -178,7 +177,7 @@ export default function Index() {
           </View>
         </View>
 
-        {/* Active Resolutions - With padding */}
+        {/* Active Resolutions */}
         <View style={styles.contentSection}>
           <Text style={styles.sectionTitle}>Active Resolutions</Text>
           
@@ -225,7 +224,7 @@ export default function Index() {
       {/* Floating Add Button */}
       <FAB
         icon="plus"
-        style={[styles.fab, { backgroundColor: colors.primary }]}
+        style={styles.fab}
         color="#FFFFFF"
         onPress={() => router.push('/add-resolution')}
       />
@@ -247,9 +246,10 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
+  // Using Figma design system colors
   container: {
     flex: 1,
-    backgroundColor: "#F5F3EE",
+    backgroundColor: "#F5F3EE", // --color-bg-secondary
   },
   loadingContainer: {
     flex: 1,
@@ -265,45 +265,37 @@ const styles = StyleSheet.create({
   },
   
   heroCard: {
-    borderBottomLeftRadius: 32,
+    backgroundColor: "#7A9B76", // --color-moss
+    borderBottomLeftRadius: 32, // --radius-xl
     borderBottomRightRadius: 32,
-    marginBottom: 24,
+    marginBottom: 24, // --space-3
     position: "relative",
     overflow: "hidden",
   },
   
-  decorativeCircle1: {
+  decorativeBlob1: {
     position: "absolute",
-    top: -50,
-    right: -50,
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    top: -80,
+    right: -100,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: "rgba(122, 155, 118, 0.15)",
   },
-  decorativeCircle2: {
+  decorativeBlob2: {
     position: "absolute",
-    bottom: -60,
+    bottom: -40,
     left: -60,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
-  },
-  decorativeCircle3: {
-    position: "absolute",
-    top: "40%",
-    right: -40,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "rgba(122, 155, 118, 0.12)",
   },
   
   heroContent: {
-    paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 16 : 50,
-    paddingBottom: 32,
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 20 : 60,
+    paddingBottom: 28,
     position: "relative",
     zIndex: 1,
   },
@@ -312,7 +304,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 32,
+    marginBottom: 28,
   },
   
   profileButton: {
@@ -320,30 +312,32 @@ const styles = StyleSheet.create({
   },
   
   date: {
-    fontSize: 14,
-    color: "rgba(255, 255, 255, 0.8)",
-    marginBottom: 6,
+    fontSize: 15,
+    color: "rgba(255, 255, 255, 0.85)",
+    marginBottom: 4,
     fontWeight: "400",
   },
   
   headerTitle: {
-    fontSize: 36,
-    fontWeight: "600",
+    fontSize: 34,
+    fontWeight: "400",
     color: "#FFFFFF",
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   
   progressBox: {
-    backgroundColor: "rgba(122, 155, 118, 0.35)",
-    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    borderRadius: 20, // --radius-lg
     padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
   },
   
   progressLabel: {
     fontSize: 11,
-    color: "rgba(255, 255, 255, 0.85)",
-    letterSpacing: 1.5,
-    marginBottom: 10,
+    color: "rgba(255, 255, 255, 0.9)",
+    letterSpacing: 1.2,
+    marginBottom: 12,
     fontWeight: "600",
   },
   
@@ -351,39 +345,39 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    marginBottom: 16,
+    marginBottom: 14,
   },
   
   progressTime: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "400",
     color: "#FFFFFF",
   },
   
   progressTimeSub: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "300",
-    color: "rgba(255, 255, 255, 0.75)",
+    color: "rgba(255, 255, 255, 0.7)",
   },
   
   progressPercent: {
-    fontSize: 44,
+    fontSize: 40,
     fontWeight: "300",
     color: "#FFFFFF",
     letterSpacing: -1,
   },
   
   progressBarBg: {
-    height: 8,
-    backgroundColor: "rgba(200, 137, 104, 0.3)",
-    borderRadius: 10,
+    height: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 8, // --radius-sm
     overflow: "hidden",
   },
   
   progressBarFilled: {
     height: "100%",
-    backgroundColor: "#C89968",
-    borderRadius: 10,
+    backgroundColor: "#C89968", // --color-sand
+    borderRadius: 8,
   },
   
   contentSection: {
@@ -391,16 +385,16 @@ const styles = StyleSheet.create({
   },
   
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#2A2A2A",
-    marginBottom: 16,
+    fontSize: 22,
+    fontWeight: "400",
+    color: "#2A2A2A", // --color-text-primary
+    marginBottom: 16, // --space-2
     letterSpacing: -0.3,
   },
   
   emptyState: {
     alignItems: "center",
-    paddingVertical: 48,
+    paddingVertical: 60,
   },
   
   emptyEmoji: {
@@ -410,17 +404,17 @@ const styles = StyleSheet.create({
   
   emptyTitle: {
     fontSize: 20,
-    fontWeight: "600",
+    fontWeight: "500",
     color: "#2A2A2A",
-    marginBottom: 8,
+    marginBottom: 8, // --space-1
   },
   
   emptyText: {
-    fontSize: 14,
-    color: "#6A6A6A",
+    fontSize: 15,
+    color: "#6A6A6A", // --color-text-secondary
     textAlign: "center",
-    paddingHorizontal: 32,
-    lineHeight: 20,
+    paddingHorizontal: 40,
+    lineHeight: 22,
   },
   
   fab: {
@@ -428,6 +422,7 @@ const styles = StyleSheet.create({
     right: 20,
     bottom: 20,
     borderRadius: 28,
+    backgroundColor: "#7A9B76",
   },
   
   loadingOverlay: {
@@ -443,7 +438,7 @@ const styles = StyleSheet.create({
   },
   
   loadingText: {
-    marginTop: 16,
+    marginTop: 16, // --space-2
     fontSize: 16,
     color: "#6A6A6A",
     fontWeight: "500",

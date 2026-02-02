@@ -141,7 +141,7 @@ export default function NotificationsScreen() {
         />
         {settings.quietHours && (
           <Text style={[styles.note, { color: colors.textSecondary }]}>
-            📝 Time selection coming soon
+             Time selection coming soon
           </Text>
         )}
       </View>
