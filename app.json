@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.vjtanishq16.resoly"
+      "bundleIdentifier": "com.resoly.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +21,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.vjtanishq16.resoly",
+      "package": "com.resoly.app",
       "intentFilters": [
         {
           "action": "VIEW",
@@ -62,6 +62,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c76d62a0-e237-4e85-b39b-b424487c3864"
+      }
     }
   }
 }

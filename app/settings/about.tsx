@@ -27,15 +27,15 @@ export default function AboutScreen() {
     // You can use expo-sharing or react-native Share API
   };
 
-  const InfoItem = ({ 
-    icon, 
-    title, 
-    value, 
-    onPress 
-  }: { 
-    icon: keyof typeof Octicons.glyphMap; 
-    title: string; 
-    value: string; 
+  const InfoItem = ({
+    icon,
+    title,
+    value,
+    onPress
+  }: {
+    icon: keyof typeof Octicons.glyphMap;
+    title: string;
+    value: string;
     onPress?: () => void;
   }) => (
     <TouchableOpacity
@@ -62,12 +62,12 @@ export default function AboutScreen() {
         <View style={[styles.logo, { backgroundColor: colors.primary }]}>
           <Text style={styles.logoText}>🌱</Text>
         </View>
-        
+
         <Text style={[styles.appName, { color: colors.text }]}>Goal Tracker</Text>
         <Text style={[styles.tagline, { color: colors.textSecondary }]}>
           Track your resolutions and achieve your goals!
         </Text>
-        
+
         <View style={styles.versionBadge}>
           <Text style={[styles.versionText, { color: colors.textSecondary }]}>
             Version {appVersion} ({buildNumber})
@@ -85,7 +85,7 @@ export default function AboutScreen() {
             <Octicons name="star" size={20} color="white" />
             <Text style={styles.actionButtonText}>Rate App</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: colors.secondary }]}
             onPress={shareApp}
@@ -99,19 +99,19 @@ export default function AboutScreen() {
       {/* App Information */}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Information</Text>
-        
+
         <InfoItem
           icon="info"
           title="App Version"
           value={appVersion}
         />
-        
+
         <InfoItem
           icon="package"
           title="Build Number"
           value={buildNumber}
         />
-        
+
         <InfoItem
           icon="device-mobile"
           title="Platform"
@@ -155,28 +155,28 @@ export default function AboutScreen() {
       {/* Connect */}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Connect With Me</Text>
-{/*         
+        {/*         
         <InfoItem
           icon="globe"
           title="Website"
           value="goaltracker.com"
           onPress={() => openURL('https://goaltracker.com')}
         /> */}
-        
+
         <InfoItem
           icon="mark-github"
           title="GitHub"
           value="vjtanishq16"
           onPress={() => openURL('https://github.com/vjtanishq16/')}
         />
-        
+
         <InfoItem
           icon="mail"
           title="Email"
           value="vijaytanishq16@gmail.com"
           onPress={() => Linking.openURL('mailto:vijaytanishq16@gmail.com')}
         />
-        
+
         <InfoItem
           icon="broadcast"
           title="Twitter"
@@ -188,7 +188,7 @@ export default function AboutScreen() {
       {/* Credits */}
       <View style={styles.section}>
         {/* <Text style={[styles.sectionTitle, { color: colors.text }]}>Credits</Text> */}
-        
+
         <View style={[styles.creditsBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.creditsText, { color: colors.textSecondary }]}>
             Developed with ❤️ by Tanishq .
